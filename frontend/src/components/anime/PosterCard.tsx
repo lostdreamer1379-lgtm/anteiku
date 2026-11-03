@@ -7,14 +7,14 @@ export default function PosterCard({
   variant = "carousel",
 }: {
   anime: AnimeSummary;
-  variant?: "carousel" | "grid";
+  variant?: "carousel" | "grid" | "compact";
 }) {
   const title = anime.title.english ?? anime.title.romaji;
 
   return (
     <Link
       to={`/anime/${anime.id}`}
-      className={`group ${variant === "grid" ? "min-w-0" : "w-40 shrink-0 md:w-48"}`}
+      className={`group ${variant === "grid" ? "min-w-0" : variant === "compact" ? "w-28 shrink-0 snap-start sm:w-32 md:w-36" : "w-40 shrink-0 md:w-48"}`}
       aria-label={title}
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-anteiku bg-bg-card">

@@ -58,17 +58,21 @@ function CollectionResults({ collection, isOpen }: { collection: Collection; isO
       <div className="min-h-0 overflow-hidden">
         <div className="border-t border-border-subtle/70 px-4 pb-5 pt-4 sm:px-5">
           {query.isLoading ? (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin] [touch-action:pan-x]">
               {Array.from({ length: 8 }).map((_, index) => (
-                <PosterCardSkeleton key={index} variant="grid" />
+                <PosterCardSkeleton key={index} variant="compact" />
               ))}
             </div>
           ) : query.isError ? (
             <p className="text-sm text-muted">We could not load this collection. Please try again.</p>
           ) : query.data?.results.length ? (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+            <div
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin] [touch-action:pan-x] overscroll-x-contain"
+              style={{ WebkitOverflowScrolling: "touch" }}
+              aria-label={`${collection.title} anime list`}
+            >
               {query.data.results.map((anime) => (
-                <PosterCard key={anime.id} anime={anime} variant="grid" />
+                <PosterCard key={anime.id} anime={anime} variant="compact" />
               ))}
             </div>
           ) : (

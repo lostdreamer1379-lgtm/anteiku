@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Info } from "lucide-react";
 import Player from "@/components/player/Player";
@@ -19,10 +20,24 @@ export default function Watch() {
 
   const { data: anime } = useAnimeDetails(animeId);
   const { query: progressQuery, progressFor, upsert } = useProgress();
+  const startedEpisodeRef = useRef<string | null>(null);
 
   const totalEpisodes = anime?.episodes ?? 99;
   const savedEntry = user ? progressFor(animeId, episodeNumber) : undefined;
   const savedProgressSeconds = savedEntry?.progressSeconds ?? 0;
+
+  useEffect(() => {
+    const episodeKey = `${animeId}-${episodeNumber}`;
+    if (!user || progressQuery.isLoading || startedEpisodeRef.current === episodeKey) return;
+
+    startedEpisodeRef.current = episodeKey;
+    upsert.mutate({
+      animeId,
+      episodeNumber,
+      progressSeconds: savedProgressSeconds,
+      completed: false,
+    });
+  }, [animeId, episodeNumber, progressQuery.isLoading, savedProgressSeconds, upsert, user]);
 
   const animeTitle = anime
     ? (anime.title.english ?? anime.title.romaji)

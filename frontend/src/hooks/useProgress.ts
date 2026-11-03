@@ -11,6 +11,8 @@ export function useProgress() {
     queryKey: ["progress"],
     queryFn: fetchProgress,
     enabled: !!user,
+    refetchOnMount: "always",
+    refetchInterval: user ? 15_000 : false,
   });
 
   const upsert = useMutation({

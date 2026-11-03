@@ -53,26 +53,29 @@ function HeroWheel({ items, selectedIndex, onChange }: {
 }) {
   const [phase, setPhase] = useState<HeroPhase>("focus");
   const [isDragging, setIsDragging] = useState(false);
+  const [dragRotation, setDragRotation] = useState(0);
   const dragStart = useRef<number | null>(null);
+  const draggingRef = useRef(false);
   const timers = useRef<number[]>([]);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
 
   const rotate = useCallback((direction: 1 | -1) => {
-    if (items.length < 2 || phaseRef.current !== "focus") return;
+    if (items.length < 2 || phaseRef.current !== "focus" || draggingRef.current) return;
 
     setPhase("zoom-out");
     const wheelTimer = window.setTimeout(() => {
+      setDragRotation(0);
       onChange(direction);
       setPhase("wheel");
-    }, 450);
-    const focusTimer = window.setTimeout(() => setPhase("focus"), 1_150);
+    }, 260);
+    const focusTimer = window.setTimeout(() => setPhase("focus"), 820);
     timers.current.push(wheelTimer, focusTimer);
   }, [items.length, onChange]);
 
   useEffect(() => {
     if (items.length < 2) return;
-    const interval = window.setInterval(() => rotate(1), 5_800);
+    const interval = window.setInterval(() => rotate(1), 4_800);
     return () => window.clearInterval(interval);
   }, [items.length, rotate]);
 
@@ -85,7 +88,7 @@ function HeroWheel({ items, selectedIndex, onChange }: {
   }
 
   const step = 360 / items.length;
-  const rotation = -(selectedIndex * step);
+  const rotation = -(selectedIndex * step) + dragRotation;
   const phaseScale = phase === "focus" ? "scale-[1.08]" : "scale-[0.78]";
 
   return (
@@ -94,25 +97,36 @@ function HeroWheel({ items, selectedIndex, onChange }: {
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
         dragStart.current = event.clientX;
+        draggingRef.current = true;
+        setDragRotation(0);
         setIsDragging(true);
+      }}
+      onPointerMove={(event) => {
+        if (dragStart.current === null || phaseRef.current !== "focus") return;
+        const distance = event.clientX - dragStart.current;
+        setDragRotation(distance * 0.42);
       }}
       onPointerUp={(event) => {
         if (dragStart.current !== null) {
           const distance = event.clientX - dragStart.current;
-          if (Math.abs(distance) > 42) rotate(distance < 0 ? 1 : -1);
+          if (Math.abs(distance) > 22) rotate(distance < 0 ? 1 : -1);
+          else setDragRotation(0);
         }
         event.currentTarget.releasePointerCapture(event.pointerId);
         dragStart.current = null;
+        draggingRef.current = false;
         setIsDragging(false);
       }}
       onPointerCancel={() => {
         dragStart.current = null;
+        draggingRef.current = false;
+        setDragRotation(0);
         setIsDragging(false);
       }}
     >
-      <div className={`absolute inset-0 transition-transform duration-700 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
+      <div className={`absolute inset-0 transition-transform duration-500 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
         <div
-          className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d]"
+          className={`absolute inset-0 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] ${isDragging ? "transition-none" : "transition-transform duration-500"}`}
           style={{ transform: `rotateY(${rotation}deg)` }}
         >
           {items.map((anime, index) => {

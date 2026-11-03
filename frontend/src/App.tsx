@@ -13,6 +13,9 @@ import SignUp from "./pages/Auth/SignUp";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import Profile from "./pages/Profile/Profile";
 import NotFound from "./pages/NotFound";
+import Manga from "./pages/Manga/Manga";
+import MangaDetails from "./pages/Manga/MangaDetails";
+import MangaReader from "./pages/Manga/MangaReader";
 
 export default function App() {
   return (
@@ -22,6 +25,9 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/seasonal" element={<Seasonal />} />
+          <Route path="/manga" element={<Manga />} />
+          <Route path="/manga/:id/read/:chapterId" element={<MangaReader />} />
+          <Route path="/manga/:id" element={<MangaDetails />} />
           <Route path="/anime/:id" element={<AnimeDetails />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />

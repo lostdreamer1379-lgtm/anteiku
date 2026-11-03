@@ -11,28 +11,71 @@ import type { WatchStatus, WatchlistEntry } from "@/types/anime";
 export function useWatchlist() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const watchlistKey = ["watchlist"] as const;
 
   const query = useQuery<WatchlistEntry[]>({
-    queryKey: ["watchlist"],
+    queryKey: watchlistKey,
     queryFn: fetchWatchlist,
     enabled: !!user,
+    refetchOnMount: "always",
   });
 
   const add = useMutation({
     mutationFn: ({ animeId, status }: { animeId: number; status: WatchStatus }) =>
       addWatchlistEntry(animeId, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlist"] }),
+    onMutate: async ({ animeId, status }) => {
+      await qc.cancelQueries({ queryKey: watchlistKey });
+      const previous = qc.getQueryData<WatchlistEntry[]>(watchlistKey);
+      const optimisticEntry: WatchlistEntry = {
+        id: `optimistic-${animeId}`,
+        animeId,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      qc.setQueryData<WatchlistEntry[]>(watchlistKey, [
+        ...(previous ?? []).filter((entry) => entry.animeId !== animeId),
+        optimisticEntry,
+      ]);
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) qc.setQueryData(watchlistKey, context.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: watchlistKey }),
   });
 
   const update = useMutation({
     mutationFn: ({ id, status }: { id: string; status: WatchStatus }) =>
       updateWatchlistEntry(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlist"] }),
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey: watchlistKey });
+      const previous = qc.getQueryData<WatchlistEntry[]>(watchlistKey);
+      qc.setQueryData<WatchlistEntry[]>(
+        watchlistKey,
+        (previous ?? []).map((entry) =>
+          entry.id === id ? { ...entry, status, updatedAt: new Date().toISOString() } : entry,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) qc.setQueryData(watchlistKey, context.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: watchlistKey }),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteWatchlistEntry(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlist"] }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: watchlistKey });
+      const previous = qc.getQueryData<WatchlistEntry[]>(watchlistKey);
+      qc.setQueryData<WatchlistEntry[]>(watchlistKey, (previous ?? []).filter((entry) => entry.id !== id));
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) qc.setQueryData(watchlistKey, context.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: watchlistKey }),
   });
 
   // Convenience: find current status for a given animeId

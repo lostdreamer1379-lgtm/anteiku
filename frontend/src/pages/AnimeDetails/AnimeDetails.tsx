@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
-import { Star, PlayCircle } from "lucide-react";
+import { Star, PlayCircle, BookOpen } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnimeDetails";
+import { useComixSearch } from "@/hooks/useComixSearch";
 import WatchStatusButtons from "@/components/anime/WatchStatusButtons";
 import PosterCarousel from "@/components/anime/PosterCarousel";
 
@@ -31,6 +32,7 @@ export default function AnimeDetails() {
   }
 
   const title = anime.title.english ?? anime.title.romaji;
+  const { data: mangaResults, isLoading: mangaLoading } = useComixSearch(title);
 
   return (
     <div>
@@ -117,6 +119,40 @@ export default function AnimeDetails() {
               <p className="mb-2 text-xs uppercase tracking-[0.2em] text-sage">Your status</p>
               <WatchStatusButtons animeId={anime.id} />
             </div>
+
+            {(mangaLoading || mangaResults?.length) && (
+              <section className="mt-7" aria-labelledby="manga-heading">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={15} className="text-sage" aria-hidden="true" />
+                  <h2 id="manga-heading" className="text-xs uppercase tracking-[0.2em] text-sage">Read the manga</h2>
+                </div>
+                {mangaLoading ? (
+                  <div className="mt-3 h-16 animate-pulse rounded-anteiku bg-bg-card" />
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {mangaResults?.slice(0, 3).map((manga) => (
+                      <a
+                        key={manga.id}
+                        href={`https://comix.to/title/${encodeURIComponent(manga.id)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 rounded-anteiku border border-border-subtle bg-bg-card p-2.5 transition-colors hover:border-sage"
+                      >
+                        {manga.img ? (
+                          <img src={manga.img} alt="" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" />
+                        ) : (
+                          <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded bg-bg-secondary text-muted"><BookOpen size={15} /></div>
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm text-ivory">{manga.title}</span>
+                          <span className="mt-1 block text-xs capitalize text-muted">{manga.type ?? "manga"} · Open in Comix ↗</span>
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </div>
         </div>
       </div>

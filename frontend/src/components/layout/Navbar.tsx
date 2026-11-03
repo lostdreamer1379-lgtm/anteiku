@@ -10,6 +10,7 @@ const links = [
   { to: "/", label: "Home" },
   { to: "/explore", label: "Explore" },
   { to: "/seasonal", label: "Seasonal" },
+  { to: "/manga", label: "Manga" },
   { to: "/watchlist", label: "Watchlist" },
 ];
 

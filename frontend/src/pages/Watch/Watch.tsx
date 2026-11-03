@@ -28,7 +28,7 @@ export default function Watch() {
 
   useEffect(() => {
     const episodeKey = `${animeId}-${episodeNumber}`;
-    if (!user || progressQuery.isLoading || startedEpisodeRef.current === episodeKey) return;
+    if (progressQuery.isLoading || startedEpisodeRef.current === episodeKey) return;
 
     startedEpisodeRef.current = episodeKey;
     upsert.mutate({
@@ -44,19 +44,16 @@ export default function Watch() {
     : `Anime #${animeId}`;
 
   function handleProgressUpdate(seconds: number) {
-    if (!user) return;
     upsert.mutate({ animeId, episodeNumber, progressSeconds: seconds, completed: false });
   }
 
   function handleEpisodeComplete() {
-    if (user) {
-      upsert.mutate({
-        animeId,
-        episodeNumber,
-        progressSeconds: 0,
-        completed: true,
-      });
-    }
+    upsert.mutate({
+      animeId,
+      episodeNumber,
+      progressSeconds: 0,
+      completed: true,
+    });
     if (episodeNumber < totalEpisodes) {
       navigate(`/watch/${animeId}/${episodeNumber + 1}`);
     }

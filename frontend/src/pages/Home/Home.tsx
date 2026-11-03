@@ -90,7 +90,7 @@ function ContinueWatchingCard({ entry, onRemove }: { entry: WatchProgressEntry; 
   );
 }
 
-function ContinueWatching({ userId }: { userId: string }) {
+function ContinueWatching({ userId }: { userId?: string }) {
   const { query } = useProgress();
   const [dismissed, setDismissed] = useState<Record<number, string>>({});
   const storageKey = `anteiku:continue-watching-dismissed:${userId}`;
@@ -113,7 +113,7 @@ function ContinueWatching({ userId }: { userId: string }) {
       });
 
     return [...latestByAnime.values()]
-      .filter((entry) => !entry.completed && entry.progressSeconds > 0)
+      .filter((entry) => !entry.completed && entry.progressSeconds >= 0)
       .filter((entry) => dismissed[entry.animeId] !== entry.updatedAt)
       .slice(0, 10);
   }, [dismissed, query.data]);
@@ -404,7 +404,7 @@ export default function Home() {
         </div>
       </section>
 
-      {user && <ContinueWatching userId={user.id} />}
+      <ContinueWatching userId={user?.id} />
 
       <PosterCarousel title="Trending Now" items={trending.data ?? []} isLoading={trending.isLoading} />
       <PosterCarousel

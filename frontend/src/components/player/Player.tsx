@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerControls from "./PlayerControls";
 import PlayerLoading from "./PlayerLoading";
 import PlayerError from "./PlayerError";
-import VidRiftPlayer, { type VidRiftProgress } from "./VidRiftPlayer";
+import VidRiftPlayer, { type VidRiftAudioTrack, type VidRiftProgress } from "./VidRiftPlayer";
 import { resolveProvider } from "./providers/PlaybackProvider";
 import type { EpisodeInfo } from "./providers/PlaybackProvider";
 
@@ -46,6 +46,8 @@ export default function Player({
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
   const videoResumeApplied = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [audioTracks, setAudioTracks] = useState<VidRiftAudioTrack[]>([]);
+  const [selectedAudio, setSelectedAudio] = useState("");
   const [key, setKey] = useState(0);
 
   const provider = resolveProvider();
@@ -156,6 +158,11 @@ export default function Player({
     setError("This sample video couldn't be loaded. Check your connection and retry.");
   }
 
+  function handleAudioTracks(tracks: VidRiftAudioTrack[], selected: string) {
+    setAudioTracks(tracks);
+    setSelectedAudio((current) => tracks.some((track) => track.value === current) ? current : selected);
+  }
+
   if (!src) {
     return <PlayerError message="The selected playback provider could not build a source for this episode." />;
   }
@@ -181,7 +188,22 @@ export default function Player({
           }}
           onExit={handleIframeExit}
           onReady={() => setLoading(false)}
+          onAudioTracks={handleAudioTracks}
+          selectedAudio={selectedAudio}
         />
+        {audioTracks.length > 0 && (
+          <div className="flex items-center gap-2 border-t border-white/10 bg-black/80 px-3 py-2 text-xs text-white backdrop-blur">
+            <span className="text-white/60">Audio language</span>
+            <select
+              value={selectedAudio}
+              onChange={(event) => setSelectedAudio(event.target.value)}
+              aria-label="Audio language"
+              className="min-w-0 rounded border border-white/20 bg-black/70 px-2 py-1 text-xs text-white outline-none focus:border-sage"
+            >
+              {audioTracks.map((track) => <option key={track.value} value={track.value}>{track.label}</option>)}
+            </select>
+          </div>
+        )}
         <div className="sr-only" aria-live="polite">
           {playing ? "Playing" : "Paused"} — episode {episode.episodeNumber}
         </div>

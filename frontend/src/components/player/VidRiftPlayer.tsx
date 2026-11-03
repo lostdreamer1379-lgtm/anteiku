@@ -8,6 +8,11 @@ export interface VidRiftProgress {
   anilistEpisode: number | null;
 }
 
+export interface VidRiftAudioTrack {
+  value: string;
+  label: string;
+}
+
 export interface VidRiftPlayerProps {
   anilistId: number;
   episode: number;
@@ -21,6 +26,8 @@ export interface VidRiftPlayerProps {
   onEnded?: () => void;
   onExit?: () => void;
   onReady?: () => void;
+  onAudioTracks?: (tracks: VidRiftAudioTrack[], selected: string) => void;
+  selectedAudio?: string;
 }
 
 function isMessageData(value: unknown): value is Record<string, unknown> {
@@ -46,14 +53,16 @@ export default function VidRiftPlayer({
   onEnded,
   onExit,
   onReady,
+  onAudioTracks,
+  selectedAudio,
 }: VidRiftPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const latestCallbacks = useRef({ onProgress, onPause, onStarted, onEnded, onExit, onReady });
+  const latestCallbacks = useRef({ onProgress, onPause, onStarted, onEnded, onExit, onReady, onAudioTracks });
   const resumeSent = useRef(false);
   const playbackStarted = useRef(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
 
-  latestCallbacks.current = { onProgress, onPause, onStarted, onEnded, onExit, onReady };
+  latestCallbacks.current = { onProgress, onPause, onStarted, onEnded, onExit, onReady, onAudioTracks };
 
   const src = vidriftAnilistUrl(anilistId, episode, { dub, title });
 
@@ -66,6 +75,10 @@ export default function VidRiftPlayer({
   useEffect(() => {
     if (iframeLoaded) send({ type: "vidrift:get-state" });
   }, [iframeLoaded, send]);
+
+  useEffect(() => {
+    if (iframeLoaded && selectedAudio) send({ type: "vidrift:set", audio: selectedAudio });
+  }, [iframeLoaded, selectedAudio, send]);
 
   useEffect(() => {
     if (!iframeLoaded || !resumeReady || resumeSent.current) return;
@@ -85,6 +98,19 @@ export default function VidRiftPlayer({
 
       const data = event.data;
       const callbacks = latestCallbacks.current;
+
+      if (data.type === "vidrift:state") {
+        const rawAudios = Array.isArray(data.audios) ? data.audios : [];
+        const tracks = rawAudios.filter(
+          (audio): audio is VidRiftAudioTrack =>
+            isMessageData(audio) && typeof audio.value === "string" && typeof audio.label === "string",
+        );
+        callbacks.onAudioTracks?.(
+          tracks,
+          typeof data.audio === "string" ? data.audio : tracks[0]?.value ?? "",
+        );
+        return;
+      }
 
       switch (data.type) {
         case "vidrift:progress": {

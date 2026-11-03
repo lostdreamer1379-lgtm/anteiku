@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Maximize2 } from "lucide-react";
 import PlayerControls from "./PlayerControls";
 import PlayerLoading from "./PlayerLoading";
 import PlayerError from "./PlayerError";
@@ -172,14 +171,6 @@ export default function Player({
     return (
       <div ref={containerRef} className="player-shell group relative w-full overflow-hidden rounded-anteiku bg-black [&:fullscreen]:flex [&:fullscreen]:h-screen [&:fullscreen]:items-center [&:fullscreen]:justify-center [&:fullscreen>div]:h-full [&:fullscreen>div]:w-full [&:fullscreen>div]:aspect-auto">
         {loading && <div className="absolute inset-0 z-10"><PlayerLoading /></div>}
-        <button
-          type="button"
-          aria-label="Fullscreen"
-          onClick={handleFullscreen}
-          className="absolute right-3 top-3 z-20 rounded-md bg-black/60 p-2 text-white/90 shadow-lg backdrop-blur transition-colors hover:bg-black/80 hover:text-white focus-visible:outline-2 focus-visible:outline-sage"
-        >
-          <Maximize2 size={17} />
-        </button>
         <VidRiftPlayer
           key={`${src}-${key}`}
           anilistId={episode.animeId}

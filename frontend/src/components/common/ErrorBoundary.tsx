@@ -1,5 +1,4 @@
 import { Component, type ReactNode, type ErrorInfo } from "react";
-import { Link } from "react-router-dom";
 
 interface Props {
   children: ReactNode;
@@ -34,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-xs uppercase tracking-[0.3em] text-sage">Something broke</p>
           <h2 className="font-serif text-2xl text-ivory">This page spilled its coffee.</h2>
           <p className="max-w-sm text-sm text-muted">
-            An unexpected error occurred. Try refreshing — if it persists, head back home.
+            An unexpected error occurred. Try refreshing — if it persists, go back to the previous page.
           </p>
           <div className="mt-2 flex gap-3">
             <button
@@ -44,12 +43,19 @@ export class ErrorBoundary extends Component<Props, State> {
             >
               Refresh
             </button>
-            <Link
-              to="/"
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.assign("/");
+                }
+              }}
               className="rounded-anteiku bg-forest px-4 py-2 text-sm text-ivory hover:bg-sage hover:text-bg-primary"
             >
-              Go home
-            </Link>
+              Go back
+            </button>
           </div>
         </div>
       );

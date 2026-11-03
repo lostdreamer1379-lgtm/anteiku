@@ -2,6 +2,7 @@
 export const MEDIA_SUMMARY_FRAGMENT = /* GraphQL */ `
   fragment MediaSummary on Media {
     id
+    type
     title { romaji english native }
     coverImage { large }
     bannerImage

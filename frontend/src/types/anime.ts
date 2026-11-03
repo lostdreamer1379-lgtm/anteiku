@@ -9,6 +9,7 @@ export interface AnimeTitle {
 
 export interface AnimeSummary {
   id: number;
+  mediaType?: string | null;
   title: AnimeTitle;
   coverImage: string;
   bannerImage: string | null;

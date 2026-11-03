@@ -14,7 +14,6 @@ export const env = {
   supabaseUrl: readEnv("VITE_SUPABASE_URL"),
   supabasePublishableKey: readEnv("VITE_SUPABASE_PUBLISHABLE_KEY"),
   apiBaseUrl: readEnv("VITE_API_BASE_URL", false) || "http://localhost:4000/api",
-  comixApiBaseUrl: readEnv("VITE_COMIX_API_BASE_URL", false) || "https://comix-api.vercel.app/api",
   playbackProvider: readEnv("VITE_PLAYBACK_PROVIDER", false).toLowerCase() === "vidrift"
     ? "vidrift" as const
     : "demo" as const,

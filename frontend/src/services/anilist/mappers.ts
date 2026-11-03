@@ -5,6 +5,7 @@ import type { AnimeDetails, AnimeSummary } from "@/types/anime";
 export function mapMediaSummary(media: any): AnimeSummary {
   return {
     id: media.id,
+    mediaType: media.type ?? null,
     title: {
       romaji: media.title?.romaji ?? "",
       english: media.title?.english ?? null,

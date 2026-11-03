@@ -57,6 +57,7 @@ function HeroWheel({ items, selectedIndex, onChange }: {
   const dragStart = useRef<number | null>(null);
   const draggingRef = useRef(false);
   const wheelDistance = useRef(0);
+  const wheelResetTimer = useRef<number | null>(null);
   const timers = useRef<number[]>([]);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -131,7 +132,11 @@ function HeroWheel({ items, selectedIndex, onChange }: {
         if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 1) return;
         event.preventDefault();
         wheelDistance.current += event.deltaX;
-        if (Math.abs(wheelDistance.current) >= 26) {
+        if (wheelResetTimer.current !== null) window.clearTimeout(wheelResetTimer.current);
+        wheelResetTimer.current = window.setTimeout(() => {
+          wheelDistance.current = 0;
+        }, 180);
+        if (Math.abs(wheelDistance.current) >= 72) {
           const direction = wheelDistance.current > 0 ? 1 : -1;
           wheelDistance.current = 0;
           rotate(direction);

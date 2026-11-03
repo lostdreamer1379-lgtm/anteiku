@@ -32,15 +32,41 @@ export interface ComixChapterImage {
 }
 
 interface SearchResponse {
-  results?: ComixMangaSearchResult[];
+  results?: Record<string, unknown>[];
+  data?: Record<string, unknown>[];
 }
 
-function resolveImageUrl(value: string | undefined) {
-  if (!value) return "";
+const comixApiOrigin = new URL(env.comixApiBaseUrl).origin;
+
+function getImageValue(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (!value || typeof value !== "object") return undefined;
+
+  const image = value as Record<string, unknown>;
+  for (const key of ["url", "src", "large", "medium", "small"]) {
+    if (typeof image[key] === "string" && image[key].trim()) return image[key].trim();
+  }
+  return undefined;
+}
+
+function resolveImageUrl(value: unknown) {
+  const rawValue = getImageValue(value);
+  if (!rawValue) return "";
   try {
-    return new URL(value, env.comixApiBaseUrl).toString();
+    const parsed = new URL(rawValue, `${comixApiOrigin}/`);
+
+    // Keep Comix's own image proxy URLs intact. Direct CDN URLs are routed
+    // through that proxy so the browser does not have to handle remote
+    // redirects, hotlink restrictions, or image host CORS policies.
+    if (parsed.origin !== comixApiOrigin && /^https?:$/i.test(parsed.protocol)) {
+      const proxy = new URL("/api/image", comixApiOrigin);
+      proxy.searchParams.set("url", parsed.toString());
+      return proxy.toString();
+    }
+
+    return parsed.toString();
   } catch {
-    return value;
+    return rawValue;
   }
 }
 
@@ -54,11 +80,23 @@ async function getJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function getJsonWithFallback<T>(primaryPath: string, fallbackPath: string): Promise<T> {
+  try {
+    return await getJson<T>(primaryPath);
+  } catch (primaryError) {
+    try {
+      return await getJson<T>(fallbackPath);
+    } catch {
+      throw primaryError;
+    }
+  }
+}
+
 function normalizeManga(item: Record<string, unknown>): ComixManga {
   return {
     id: String(item.id ?? item.slug ?? ""),
     title: String(item.title ?? item.name ?? "Untitled manga"),
-    img: resolveImageUrl(String(item.img ?? item.cover ?? "")),
+    img: resolveImageUrl(item.img ?? item.cover),
     type: typeof item.type === "string" ? item.type : undefined,
     status: typeof item.status === "string" || typeof item.status === "number" ? item.status : undefined,
     score: typeof item.score === "number" ? item.score : undefined,
@@ -88,20 +126,41 @@ export async function searchComixManga(title: string): Promise<ComixMangaSearchR
   url.searchParams.set("limit", "6");
 
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`Comix search failed: ${response.status}`);
+  if (!response.ok) {
+    const fallbackUrl = new URL(`${env.comixApiBaseUrl}/manga/search`);
+    fallbackUrl.searchParams.set("q", title);
+    fallbackUrl.searchParams.set("limit", "6");
+    const fallbackResponse = await fetch(fallbackUrl);
+    if (!fallbackResponse.ok) throw new Error(`Comix search failed: ${fallbackResponse.status}`);
+    const fallbackPayload = await fallbackResponse.json() as SearchResponse;
+    return (fallbackPayload.results ?? fallbackPayload.data ?? []).map(normalizeSearchResult);
+  }
 
   const payload = await response.json() as SearchResponse;
-  return (payload.results ?? []).map((manga) => ({
-    ...manga,
-    img: resolveImageUrl(manga.img ?? manga.cover),
-  }));
+  return (payload.results ?? payload.data ?? []).map(normalizeSearchResult);
+}
+
+function normalizeSearchResult(item: Record<string, unknown>): ComixMangaSearchResult {
+  return {
+    id: String(item.id ?? item.slug ?? ""),
+    title: String(item.title ?? item.name ?? "Untitled manga"),
+    img: resolveImageUrl(item.img ?? item.cover),
+    type: typeof item.type === "string" ? item.type : undefined,
+    status: typeof item.status === "string" || typeof item.status === "number" ? item.status : undefined,
+    score: typeof item.score === "number" ? item.score : undefined,
+  };
 }
 
 export async function getComixHome(): Promise<{ popular: ComixManga[]; latest: ComixManga[] }> {
-  const payload = await getJson<{ popular?: Record<string, unknown>[]; latest?: Record<string, unknown>[] }>("manga/home?sfw=true");
+  const payload = await getJsonWithFallback<{
+    popular?: Record<string, unknown>[];
+    latest?: Record<string, unknown>[];
+    data?: { popular?: Record<string, unknown>[]; latest?: Record<string, unknown>[] };
+  }>("manga/home?sfw=true", "manga/home");
+  const home = payload.data ?? payload;
   return {
-    popular: (payload.popular ?? []).map(normalizeManga),
-    latest: (payload.latest ?? []).map(normalizeManga),
+    popular: (home.popular ?? []).map(normalizeManga),
+    latest: (home.latest ?? []).map(normalizeManga),
   };
 }
 
@@ -124,7 +183,7 @@ export async function getComixChapterImages(chapterId: string): Promise<ComixCha
     `manga/read?chapterId=${encodeURIComponent(chapterId)}`,
   );
   return (payload.images ?? [])
-    .filter((image) => typeof image.url === "string")
+    .filter((image) => Boolean(getImageValue(image.url)))
     .map((image) => ({
       url: resolveImageUrl(image.url),
       width: image.width,

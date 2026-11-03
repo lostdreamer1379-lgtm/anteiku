@@ -11,7 +11,7 @@ function MangaCard({ manga }: { manga: ComixManga }) {
     <Link to={`/manga/${encodeURIComponent(manga.id)}`} className="group min-w-0">
       <div className="relative aspect-[2/3] overflow-hidden rounded-anteiku bg-bg-card">
         {manga.img ? (
-          <img src={manga.img} alt={manga.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img src={manga.img} alt={manga.title} loading="lazy" onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : <div className="flex h-full items-center justify-center text-xs text-muted">No cover</div>}
         {manga.score !== undefined && (
           <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-bg-primary/85 px-2 py-1 text-[0.65rem] text-ivory backdrop-blur">
@@ -70,7 +70,7 @@ export default function Manga() {
               <div className="p-1.5">
                 {searchQuery.data.slice(0, 6).map((manga) => (
                   <Link key={manga.id} to={`/manga/${encodeURIComponent(manga.id)}`} onClick={() => setSearchOpen(false)} className="flex items-center gap-3 rounded-md p-2.5 hover:bg-bg-secondary">
-                    {manga.img ? <img src={manga.img} alt="" className="h-12 w-9 rounded object-cover" /> : <BookOpen size={18} className="mx-2 text-sage" />}
+                    {manga.img ? <img src={manga.img} alt="" onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-12 w-9 rounded object-cover" /> : <BookOpen size={18} className="mx-2 text-sage" />}
                     <span className="min-w-0"><span className="block truncate text-sm text-ivory">{manga.title}</span><span className="text-xs capitalize text-muted">{manga.type ?? "manga"}</span></span>
                   </Link>
                 ))}

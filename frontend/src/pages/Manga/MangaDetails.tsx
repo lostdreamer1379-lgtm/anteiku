@@ -22,7 +22,7 @@ export default function MangaDetails() {
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-14">
       <Link to="/manga" className="flex items-center gap-2 text-sm text-muted hover:text-ivory"><ArrowLeft size={16} /> Back to manga</Link>
       <div className="mt-8 grid gap-8 md:grid-cols-[14rem_minmax(0,1fr)] lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <div className="mx-auto w-48 overflow-hidden rounded-anteiku bg-bg-card shadow-[var(--shadow-soft)] md:mx-0 md:w-full"><div className="aspect-[2/3]">{item.img && <img src={item.img} alt={item.title} className="h-full w-full object-cover" />}</div></div>
+        <div className="mx-auto w-48 overflow-hidden rounded-anteiku bg-bg-card shadow-[var(--shadow-soft)] md:mx-0 md:w-full"><div className="aspect-[2/3]">{item.img && <img src={item.img} alt={item.title} onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-full w-full object-cover" />}</div></div>
         <div>
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-sage"><BookOpen size={14} /> Manga</p>
           <h1 className="mt-2 font-serif text-3xl text-ivory md:text-5xl">{item.title}</h1>

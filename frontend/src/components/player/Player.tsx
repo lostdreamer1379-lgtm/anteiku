@@ -176,7 +176,7 @@ export default function Player({
           type="button"
           aria-label="Fullscreen"
           onClick={handleFullscreen}
-          className="absolute right-3 top-3 z-20 rounded-md bg-black/55 p-2 text-white/80 opacity-0 backdrop-blur transition-opacity hover:text-white focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute right-3 top-3 z-20 rounded-md bg-black/60 p-2 text-white/90 shadow-lg backdrop-blur transition-colors hover:bg-black/80 hover:text-white focus-visible:outline-2 focus-visible:outline-sage"
         >
           <Maximize2 size={17} />
         </button>

@@ -51,7 +51,7 @@ function EpisodeItem({
         </div>
         <span className="min-w-0 py-0.5">
           <span className="block truncate text-sm text-ivory">Episode {episode}</span>
-          <span className={`mt-1 block text-[0.7rem] leading-4 text-muted transition-[max-height,opacity] duration-300 ease-out ${expanded ? "max-h-40 opacity-100" : "line-clamp-2 max-h-8 opacity-90"}`}>
+          <span className={`mt-1 block overflow-hidden text-[0.7rem] leading-4 text-muted transition-[max-height,opacity] duration-300 ease-out ${expanded ? "max-h-56 opacity-100" : "line-clamp-2 max-h-8 opacity-90"}`}>
             Episode {episode} of {animeTitle}. {description}
           </span>
           {progress?.completed && <span className="mt-1 block text-[0.65rem] text-sage">Completed</span>}

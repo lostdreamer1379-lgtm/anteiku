@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useHomeCarousels } from "@/hooks/useHomeCarousels";
 import { useSearchAnime } from "@/hooks/useSearchAnime";
 import PosterCarousel from "@/components/anime/PosterCarousel";
 import PosterCard from "@/components/anime/PosterCard";
 import PosterCardSkeleton from "@/components/ui/PosterCardSkeleton";
+import type { AnimeSummary } from "@/types/anime";
 
 const genres = [
   "Action", "Adventure", "Romance", "Psychological", "Thriller",
@@ -42,6 +43,126 @@ const collections = [
 ];
 
 type Collection = (typeof collections)[number];
+
+type HeroPhase = "focus" | "zoom-out" | "wheel";
+
+function HeroWheel({ items, selectedIndex, onChange }: {
+  items: AnimeSummary[];
+  selectedIndex: number;
+  onChange: (direction: 1 | -1) => void;
+}) {
+  const [phase, setPhase] = useState<HeroPhase>("focus");
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef<number | null>(null);
+  const timers = useRef<number[]>([]);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+
+  const rotate = useCallback((direction: 1 | -1) => {
+    if (items.length < 2 || phaseRef.current !== "focus") return;
+
+    setPhase("zoom-out");
+    const wheelTimer = window.setTimeout(() => {
+      onChange(direction);
+      setPhase("wheel");
+    }, 450);
+    const focusTimer = window.setTimeout(() => setPhase("focus"), 1_150);
+    timers.current.push(wheelTimer, focusTimer);
+  }, [items.length, onChange]);
+
+  useEffect(() => {
+    if (items.length < 2) return;
+    const interval = window.setInterval(() => rotate(1), 5_800);
+    return () => window.clearInterval(interval);
+  }, [items.length, rotate]);
+
+  useEffect(() => () => {
+    timers.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
+  if (!items.length) {
+    return <div className="mx-auto h-[17rem] w-[17rem] animate-pulse rounded-full bg-bg-card/60 sm:h-[22rem] sm:w-[22rem]" />;
+  }
+
+  const step = 360 / items.length;
+  const rotation = -(selectedIndex * step);
+  const phaseScale = phase === "focus" ? "scale-[1.02]" : "scale-[0.7]";
+
+  return (
+    <div
+      className="relative mx-auto h-[18rem] w-full max-w-[24rem] touch-pan-y select-none sm:h-[24rem] sm:max-w-[30rem]"
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        dragStart.current = event.clientX;
+        setIsDragging(true);
+      }}
+      onPointerUp={(event) => {
+        if (dragStart.current !== null) {
+          const distance = event.clientX - dragStart.current;
+          if (Math.abs(distance) > 42) rotate(distance < 0 ? 1 : -1);
+        }
+        event.currentTarget.releasePointerCapture(event.pointerId);
+        dragStart.current = null;
+        setIsDragging(false);
+      }}
+      onPointerCancel={() => {
+        dragStart.current = null;
+        setIsDragging(false);
+      }}
+    >
+      <div className={`absolute inset-0 transition-transform duration-700 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
+        <div
+          className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d]"
+          style={{ transform: `rotateY(${rotation}deg)` }}
+        >
+          {items.map((anime, index) => {
+            const title = anime.title.english ?? anime.title.romaji;
+            return (
+              <Link
+                key={anime.id}
+                to={`/anime/${anime.id}`}
+                aria-label={`View ${title}`}
+                className="absolute left-1/2 top-1/2 h-40 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-anteiku border border-ivory/15 bg-bg-card shadow-[0_18px_35px_rgba(0,0,0,0.45)] transition-[filter,opacity] duration-500 sm:h-52 sm:w-36"
+                style={{
+                  transform: `rotateY(${index * step}deg) translateZ(clamp(7.2rem, 23vw, 12.5rem))`,
+                  backfaceVisibility: "hidden",
+                  opacity: index === selectedIndex ? 1 : 0.82,
+                }}
+              >
+                <img src={anime.coverImage} alt="" draggable={false} className="h-full w-full object-cover" />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg-primary via-bg-primary/80 to-transparent px-2 pb-2 pt-8 text-[0.65rem] leading-tight text-ivory sm:text-xs">
+                  {title}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Previous featured anime"
+        onClick={() => rotate(-1)}
+        className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border-subtle bg-bg-primary/80 p-2 text-ivory backdrop-blur transition-colors hover:border-sage hover:text-sage sm:left-2"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <button
+        type="button"
+        aria-label="Next featured anime"
+        onClick={() => rotate(1)}
+        className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border-subtle bg-bg-primary/80 p-2 text-ivory backdrop-blur transition-colors hover:border-sage hover:text-sage sm:right-2"
+      >
+        <ChevronRight size={18} />
+      </button>
+      <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 gap-1.5" aria-label="Featured anime position">
+        {items.slice(0, 8).map((anime, index) => (
+          <span key={anime.id} className={`h-1.5 rounded-full transition-all duration-300 ${index === selectedIndex ? "w-5 bg-sage" : "w-1.5 bg-muted/50"}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function CollectionResults({ collection, isOpen }: { collection: Collection; isOpen: boolean }) {
   const query = useSearchAnime(
@@ -87,13 +208,22 @@ function CollectionResults({ collection, isOpen }: { collection: Collection; isO
 export default function Home() {
   const { trending, airing, seasonal } = useHomeCarousels();
   const [openCollection, setOpenCollection] = useState<string | null>(null);
-  const hero = trending.data?.[0];
+  const heroItems = trending.data ?? [];
+  const [heroIndex, setHeroIndex] = useState(0);
+  const hero = heroItems[heroIndex] ?? heroItems[0];
+  const changeHero = useCallback((direction: 1 | -1) => {
+    setHeroIndex((current) => (current + direction + heroItems.length) % heroItems.length);
+  }, [heroItems.length]);
+
+  useEffect(() => {
+    setHeroIndex(0);
+  }, [heroItems.length]);
 
   return (
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-border-subtle/60">
-        <div className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col justify-end gap-4 px-5 py-16 md:px-8">
+        <div className="relative mx-auto grid min-h-[60vh] max-w-7xl items-center gap-8 px-5 py-12 md:grid-cols-[minmax(0,0.9fr)_minmax(22rem,1.1fr)] md:px-8 md:py-16">
           {hero?.bannerImage && (
             <img
               src={hero.bannerImage}
@@ -104,27 +234,33 @@ export default function Home() {
           )}
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg-primary via-bg-primary/70 to-bg-primary/20" />
 
-          {trending.isLoading && <div className="h-10 w-2/3 animate-pulse rounded bg-bg-card" />}
+          <div className="relative z-10 flex flex-col justify-center gap-4">
+            {trending.isLoading && <div className="h-10 w-2/3 animate-pulse rounded bg-bg-card" />}
 
-          {hero && (
-            <>
-              <p className="text-xs uppercase tracking-[0.3em] text-sage">Featured</p>
-              <h1 className="max-w-2xl font-serif text-4xl text-ivory md:text-5xl">
-                {hero.title.english ?? hero.title.romaji}
-              </h1>
-              <p className="text-sm text-muted">
-                {[hero.format, hero.year, ...hero.genres.slice(0, 3)].filter(Boolean).join(" · ")}
-              </p>
-              <div className="mt-4 flex gap-3">
-                <Link
-                  to={`/anime/${hero.id}`}
-                  className="rounded-anteiku bg-forest px-5 py-2.5 text-sm font-medium tracking-wide text-ivory transition-colors hover:bg-sage hover:text-bg-primary"
-                >
-                  View Details
-                </Link>
-              </div>
-            </>
-          )}
+            {hero && (
+              <>
+                <p className="text-xs uppercase tracking-[0.3em] text-sage">Featured · Trending now</p>
+                <h1 className="max-w-2xl font-serif text-4xl text-ivory md:text-5xl">
+                  {hero.title.english ?? hero.title.romaji}
+                </h1>
+                <p className="text-sm text-muted">
+                  {[hero.format, hero.year, ...hero.genres.slice(0, 3)].filter(Boolean).join(" · ")}
+                </p>
+                <div className="mt-4 flex gap-3">
+                  <Link
+                    to={`/anime/${hero.id}`}
+                    className="rounded-anteiku bg-forest px-5 py-2.5 text-sm font-medium tracking-wide text-ivory transition-colors hover:bg-sage hover:text-bg-primary"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="relative z-10">
+            <HeroWheel items={heroItems} selectedIndex={heroIndex} onChange={changeHero} />
+          </div>
         </div>
       </section>
 

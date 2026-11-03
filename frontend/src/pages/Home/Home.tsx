@@ -56,6 +56,7 @@ function HeroWheel({ items, selectedIndex, onChange }: {
   const [dragRotation, setDragRotation] = useState(0);
   const dragStart = useRef<number | null>(null);
   const draggingRef = useRef(false);
+  const wheelDistance = useRef(0);
   const timers = useRef<number[]>([]);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -112,7 +113,9 @@ function HeroWheel({ items, selectedIndex, onChange }: {
           if (Math.abs(distance) > 22) rotate(distance < 0 ? 1 : -1);
           else setDragRotation(0);
         }
-        event.currentTarget.releasePointerCapture(event.pointerId);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
         dragStart.current = null;
         draggingRef.current = false;
         setIsDragging(false);
@@ -122,6 +125,17 @@ function HeroWheel({ items, selectedIndex, onChange }: {
         draggingRef.current = false;
         setDragRotation(0);
         setIsDragging(false);
+      }}
+      onWheel={(event) => {
+        // Trackpad swipes arrive as horizontal wheel events on laptops.
+        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 1) return;
+        event.preventDefault();
+        wheelDistance.current += event.deltaX;
+        if (Math.abs(wheelDistance.current) >= 26) {
+          const direction = wheelDistance.current > 0 ? 1 : -1;
+          wheelDistance.current = 0;
+          rotate(direction);
+        }
       }}
     >
       <div className={`absolute inset-0 transition-transform duration-500 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>

@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import type { UpdateProfileSchema } from "../validators/profile.js";
 import type { z } from "zod";
 import { ApiError } from "../middleware/errorHandler.js";
+import { supabaseAdmin } from "../lib/supabaseAdmin.js";
 
 type UpdateInput = z.infer<typeof UpdateProfileSchema>;
 
@@ -38,4 +39,14 @@ export async function updateProfile(userId: string, input: UpdateInput) {
       ...(input.avatarUrl !== undefined && { avatarUrl: input.avatarUrl }),
     },
   });
+}
+
+export async function deleteAccount(userId: string) {
+  // The relation cascades remove the user's profile, watchlist, and progress.
+  await prisma.profile.deleteMany({ where: { id: userId } });
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (error) {
+    throw new ApiError(502, "Could not delete the authentication account. Please try again.");
+  }
 }

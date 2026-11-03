@@ -7,3 +7,4 @@ export const profileRouter = Router();
 profileRouter.use(requireAuth);
 profileRouter.get("/", profileController.getProfile);
 profileRouter.put("/", profileController.updateProfile);
+profileRouter.delete("/", profileController.deleteAccount);

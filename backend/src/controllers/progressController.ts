@@ -24,8 +24,8 @@ export async function upsertProgress(req: Request, res: Response, next: NextFunc
       req.userId!,
       animeId,
       episodeNumber,
-      progressSeconds,
-      completed
+      progressSeconds ?? 0,
+      completed ?? false
     );
     created(res, record);
   } catch (err) {

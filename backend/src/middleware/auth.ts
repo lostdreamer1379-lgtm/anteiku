@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { createClient } from "@supabase/supabase-js";
-import { env } from "../config/env.js";
+import { supabaseAdmin } from "../lib/supabaseAdmin.js";
 import { ApiError } from "./errorHandler.js";
 
 declare global {
@@ -11,8 +10,6 @@ declare global {
     }
   }
 }
-
-const supabaseAdmin = createClient(env.supabaseUrl, env.supabaseJwtSecret);
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {

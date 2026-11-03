@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Palette } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,9 +30,11 @@ interface ProfileData {
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const qc = useQueryClient();
   const [saved, setSaved] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: ["profile"],
@@ -50,6 +53,14 @@ export default function Profile() {
       qc.invalidateQueries({ queryKey: ["profile"] });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => apiFetch<void>("/profile", { method: "DELETE" }),
+    onSuccess: async () => {
+      await signOut();
+      navigate("/");
     },
   });
 
@@ -154,6 +165,59 @@ export default function Profile() {
             );
           })}
         </div>
+      </section>
+
+      <section className="mt-10 border-t border-red-900/40 pt-8" aria-labelledby="danger-heading">
+        <p className="text-xs uppercase tracking-[0.3em] text-red-400">Danger zone</p>
+        <h2 id="danger-heading" className="mt-1 font-serif text-xl text-ivory">Delete account</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          Permanently removes your account, profile, watchlist, and viewing progress. This cannot be undone.
+        </p>
+
+        {!deleteConfirmation ? (
+          <button
+            type="button"
+            onClick={() => setDeleteConfirmation(" ")}
+            className="mt-4 rounded-anteiku border border-red-900/70 px-4 py-2 text-sm text-red-300 transition-colors hover:border-red-400 hover:bg-red-950/30 hover:text-red-200"
+          >
+            Delete my account
+          </button>
+        ) : (
+          <div className="mt-4 rounded-anteiku border border-red-900/70 bg-red-950/20 p-4">
+            <p className="text-sm text-red-200">Type <span className="font-semibold">DELETE</span> to confirm.</p>
+            <input
+              type="text"
+              value={deleteConfirmation.trim()}
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+              autoComplete="off"
+              className="mt-3 w-full rounded-anteiku border border-red-900/70 bg-bg-primary px-3 py-2 text-sm text-ivory placeholder:text-muted focus:border-red-400 focus:outline-none"
+              placeholder="DELETE"
+              aria-label="Type DELETE to confirm account deletion"
+            />
+            {deleteMutation.isError && (
+              <p role="alert" className="mt-2 text-sm text-red-300">
+                {deleteMutation.error instanceof Error ? deleteMutation.error.message : "Account deletion failed"}
+              </p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setDeleteConfirmation(""); deleteMutation.reset(); }}
+                className="rounded-anteiku border border-border-subtle px-4 py-2 text-sm text-muted hover:border-sage hover:text-ivory"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteConfirmation.trim() !== "DELETE" || deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate()}
+                className="rounded-anteiku bg-red-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Permanently delete account"}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       <div className="mt-10 border-t border-border-subtle pt-8">

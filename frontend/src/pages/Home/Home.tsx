@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useHomeCarousels } from "@/hooks/useHomeCarousels";
 import { useSearchAnime } from "@/hooks/useSearchAnime";
+import { useAnimeDetails } from "@/hooks/useAnimeDetails";
+import { useProgress } from "@/hooks/useProgress";
+import { useAuth } from "@/contexts/AuthContext";
 import PosterCarousel from "@/components/anime/PosterCarousel";
 import PosterCard from "@/components/anime/PosterCard";
 import PosterCardSkeleton from "@/components/ui/PosterCardSkeleton";
-import type { AnimeSummary } from "@/types/anime";
+import type { AnimeSummary, WatchProgressEntry } from "@/types/anime";
 
 const genres = [
   "Action", "Adventure", "Romance", "Psychological", "Thriller",
@@ -43,6 +46,108 @@ const collections = [
 ];
 
 type Collection = (typeof collections)[number];
+
+function formatPlaybackTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function ContinueWatchingCard({ entry, onRemove }: { entry: WatchProgressEntry; onRemove: () => void }) {
+  const { data: anime, isLoading } = useAnimeDetails(entry.animeId);
+
+  if (isLoading || !anime) {
+    return <div className="w-32 shrink-0 pt-5 sm:w-36 md:w-40"><div className="aspect-[2/3] animate-pulse rounded-anteiku bg-bg-card" /></div>;
+  }
+
+  const title = anime.title.english ?? anime.title.romaji;
+
+  return (
+    <div className="relative w-32 shrink-0 pt-5 sm:w-36 md:w-40">
+      <button
+        type="button"
+        aria-label={`Remove ${title} from Continue Watching`}
+        onClick={onRemove}
+        className="absolute right-1 top-0 z-10 rounded-full border border-border-subtle bg-bg-primary/90 p-1 text-muted shadow-sm backdrop-blur transition-colors hover:border-red-400 hover:text-red-300"
+      >
+        <X size={13} aria-hidden="true" />
+      </button>
+      <Link
+        to={`/watch/${entry.animeId}/${entry.episodeNumber}`}
+        className="group block"
+        aria-label={`Continue watching ${title}, episode ${entry.episodeNumber}`}
+      >
+        <div className="relative aspect-[2/3] overflow-hidden rounded-anteiku bg-bg-card shadow-[var(--shadow-soft)]">
+          <img src={anime.coverImage} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg-primary via-bg-primary/85 to-transparent px-2 pb-2 pt-8">
+            <p className="text-[0.68rem] font-medium text-ivory">Resume {formatPlaybackTime(entry.progressSeconds)}</p>
+          </div>
+        </div>
+        <p className="mt-2 line-clamp-2 text-sm text-ivory">{title}</p>
+        <p className="mt-0.5 text-xs text-muted">Episode {entry.episodeNumber} · Continue</p>
+      </Link>
+    </div>
+  );
+}
+
+function ContinueWatching({ userId }: { userId: string }) {
+  const { query } = useProgress();
+  const [dismissed, setDismissed] = useState<Record<number, string>>({});
+  const storageKey = `anteiku:continue-watching-dismissed:${userId}`;
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      setDismissed(saved ? (JSON.parse(saved) as Record<number, string>) : {});
+    } catch {
+      setDismissed({});
+    }
+  }, [storageKey]);
+
+  const entries = useMemo(() => {
+    const latestByAnime = new Map<number, WatchProgressEntry>();
+    [...(query.data ?? [])]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .forEach((entry) => {
+        if (!latestByAnime.has(entry.animeId)) latestByAnime.set(entry.animeId, entry);
+      });
+
+    return [...latestByAnime.values()]
+      .filter((entry) => !entry.completed && entry.progressSeconds > 0)
+      .filter((entry) => dismissed[entry.animeId] !== entry.updatedAt)
+      .slice(0, 10);
+  }, [dismissed, query.data]);
+
+  function remove(entry: WatchProgressEntry) {
+    const next = { ...dismissed, [entry.animeId]: entry.updatedAt };
+    setDismissed(next);
+    window.localStorage.setItem(storageKey, JSON.stringify(next));
+  }
+
+  return (
+    <section className="px-5 py-8 md:px-8">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="font-serif text-xl text-ivory">Continue Watching</h2>
+          <p className="mt-1 text-sm text-muted">Pick up exactly where you left off.</p>
+        </div>
+      </div>
+      {query.isLoading ? (
+        <div className="flex gap-4 overflow-hidden pb-2">
+          {Array.from({ length: 5 }).map((_, index) => <PosterCardSkeleton key={index} variant="compact" />)}
+        </div>
+      ) : entries.length ? (
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:thin] [touch-action:pan-x] overscroll-x-contain">
+          {entries.map((entry) => <ContinueWatchingCard key={`${entry.animeId}-${entry.episodeNumber}`} entry={entry} onRemove={() => remove(entry)} />)}
+        </div>
+      ) : (
+        <div className="rounded-anteiku border border-border-subtle bg-bg-card px-4 py-5 text-sm text-muted">
+          Your unfinished anime will appear here after you start watching.
+        </div>
+      )}
+    </section>
+  );
+}
 
 type HeroPhase = "focus" | "zoom-out" | "wheel";
 
@@ -241,6 +346,7 @@ function CollectionResults({ collection, isOpen }: { collection: Collection; isO
 
 export default function Home() {
   const { trending, airing, seasonal } = useHomeCarousels();
+  const { user } = useAuth();
   const [openCollection, setOpenCollection] = useState<string | null>(null);
   const heroItems = trending.data ?? [];
   const [heroIndex, setHeroIndex] = useState(0);
@@ -297,6 +403,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {user && <ContinueWatching userId={user.id} />}
 
       <PosterCarousel title="Trending Now" items={trending.data ?? []} isLoading={trending.isLoading} />
       <PosterCarousel

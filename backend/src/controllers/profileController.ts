@@ -22,3 +22,12 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
     next(err);
   }
 }
+
+export async function deleteAccount(req: Request, res: Response, next: NextFunction) {
+  try {
+    await profileService.deleteAccount(req.userId!);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

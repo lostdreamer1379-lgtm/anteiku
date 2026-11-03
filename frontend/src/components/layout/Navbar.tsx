@@ -1,8 +1,10 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Search, User, LogOut, Menu, X } from "lucide-react";
-import { useState, useRef, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import clsx from "clsx";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useSearchAnime } from "@/hooks/useSearchAnime";
 
 const links = [
   { to: "/", label: "Home" },
@@ -17,7 +19,23 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLFormElement>(null);
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
+  const suggestions = useSearchAnime(
+    { search: debouncedSearch || undefined, sort: ["SEARCH_MATCH"], perPage: 6 },
+    Boolean(debouncedSearch),
+  );
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    function closeOnOutsidePointer(event: PointerEvent) {
+      if (!searchRef.current?.contains(event.target as Node)) setSearchOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [searchOpen]);
 
   async function handleSignOut() {
     await signOut();
@@ -29,6 +47,7 @@ export default function Navbar() {
     event.preventDefault();
     const query = searchQuery.trim();
     navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
+    setSearchOpen(false);
     setOpen(false);
   }
 
@@ -58,7 +77,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <form onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">
+          <form ref={searchRef} onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">
             <Search
               size={16}
               aria-hidden="true"
@@ -67,11 +86,69 @@ export default function Navbar() {
             <input
               type="search"
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
               placeholder="Search anime…"
               aria-label="Search anime"
+              aria-expanded={searchOpen && Boolean(searchQuery.trim())}
+              aria-controls="navbar-search-results"
               className="h-9 w-full rounded-anteiku border border-border-subtle bg-bg-card/80 py-2 pl-9 pr-3 text-xs text-ivory placeholder:text-muted focus:border-sage focus:outline-none"
             />
+
+            {searchOpen && searchQuery.trim() && (
+              <div
+                id="navbar-search-results"
+                role="listbox"
+                className="absolute right-0 top-[calc(100%+0.55rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)]"
+              >
+                {suggestions.isLoading ? (
+                  <div className="space-y-2 p-3" aria-live="polite">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="h-12 animate-pulse rounded-md bg-bg-secondary" />
+                    ))}
+                  </div>
+                ) : suggestions.data?.results.length ? (
+                  <>
+                    <div className="border-b border-border-subtle/70 px-3 py-2 text-[0.65rem] uppercase tracking-[0.18em] text-sage">
+                      Top matches
+                    </div>
+                    <div className="max-h-[min(24rem,60vh)] overflow-y-auto p-1.5">
+                      {suggestions.data.results.slice(0, 6).map((anime) => {
+                        const title = anime.title.english ?? anime.title.romaji;
+                        return (
+                          <Link
+                            key={anime.id}
+                            to={`/anime/${anime.id}`}
+                            role="option"
+                            onClick={() => setSearchOpen(false)}
+                            className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-bg-secondary"
+                          >
+                            <img src={anime.coverImage} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm text-ivory">{title}</span>
+                              <span className="mt-1 block truncate text-xs text-muted">
+                                {[anime.format, anime.year, anime.genres[0]].filter(Boolean).join(" · ")}
+                              </span>
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full border-t border-border-subtle/70 px-3 py-2.5 text-left text-xs text-sage transition-colors hover:bg-bg-secondary hover:text-ivory"
+                    >
+                      View all results for “{searchQuery.trim()}”
+                    </button>
+                  </>
+                ) : (
+                  <p className="p-4 text-sm text-muted" role="status">No anime found yet.</p>
+                )}
+              </div>
+            )}
           </form>
 
           {user ? (

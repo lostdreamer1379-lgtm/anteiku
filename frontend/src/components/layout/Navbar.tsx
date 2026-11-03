@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Search, User, LogOut, Menu, X } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import clsx from "clsx";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,12 +16,20 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   async function handleSignOut() {
     await signOut();
     setUserMenuOpen(false);
     navigate("/");
+  }
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
+    setOpen(false);
   }
 
   return (
@@ -50,14 +58,21 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="Search"
-            onClick={() => navigate("/explore")}
-            className="rounded-anteiku p-2 text-muted transition-colors hover:bg-bg-card hover:text-ivory"
-          >
-            <Search size={18} />
-          </button>
+          <form onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">
+            <Search
+              size={16}
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search anime…"
+              aria-label="Search anime"
+              className="h-9 w-full rounded-anteiku border border-border-subtle bg-bg-card/80 py-2 pl-9 pr-3 text-xs text-ivory placeholder:text-muted focus:border-sage focus:outline-none"
+            />
+          </form>
 
           {user ? (
             <div className="relative hidden md:block" ref={userMenuRef}>

@@ -124,30 +124,27 @@ export default function AnimeDetails() {
               <section className="mt-7" aria-labelledby="manga-heading">
                 <div className="flex items-center gap-2">
                   <BookOpen size={15} className="text-sage" aria-hidden="true" />
-                  <h2 id="manga-heading" className="text-xs uppercase tracking-[0.2em] text-sage">Read the manga</h2>
+                  <h2 id="manga-heading" className="text-xs uppercase tracking-[0.2em] text-sage">Manga adaptation</h2>
                 </div>
                 {mangaLoading ? (
                   <div className="mt-3 h-16 animate-pulse rounded-anteiku bg-bg-card" />
                 ) : (
                   <div className="mt-3 space-y-2">
-                    {mangaResults?.slice(0, 3).map((manga) => (
-                      <a
+                    {mangaResults?.slice(0, 1).map((manga) => (
+                      <div
                         key={manga.id}
-                        href={`https://comix.to/title/${encodeURIComponent(manga.id)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 rounded-anteiku border border-border-subtle bg-bg-card p-2.5 transition-colors hover:border-sage"
+                        className="flex items-start gap-3 rounded-anteiku border border-border-subtle bg-bg-card p-3"
                       >
                         {manga.img ? (
-                          <img src={manga.img} alt="" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" />
+                          <img src={manga.img} alt={`${manga.title} cover`} onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-20 w-14 shrink-0 rounded object-cover" loading="lazy" />
                         ) : (
-                          <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded bg-bg-secondary text-muted"><BookOpen size={15} /></div>
+                          <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded bg-bg-secondary text-muted"><BookOpen size={15} /></div>
                         )}
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm text-ivory">{manga.title}</span>
-                          <span className="mt-1 block text-xs capitalize text-muted">{manga.type ?? "manga"} · Open in Comix ↗</span>
-                        </span>
-                      </a>
+                        <div className="min-w-0">
+                          <p className="text-sm text-ivory">{manga.title}</p>
+                          <p className="mt-2 text-xs leading-5 text-muted">This anime is adapted from or associated with this {manga.type ?? "manga"}. The manga is shown for context only and cannot be opened from here.</p>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}

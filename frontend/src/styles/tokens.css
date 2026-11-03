@@ -1,17 +1,66 @@
 /* ANTEIKU design tokens — Japanese cafe warmth meets dark cinematic anime aesthetics */
-:root {
-  --color-bg-primary: #101511;
-  --color-bg-secondary: #171e19;
-  --color-bg-card: #1c2520;
-  --color-forest: #294c39;
-  --color-sage: #6d9978;
-  --color-coffee: #604534;
-  --color-ivory: #f1eee4;
-  --color-muted: #a4ada4;
-  --color-border-subtle: #303a33;
+:root,
+:root[data-theme="cappuccino"] {
+  --color-bg-primary: 16 21 17;
+  --color-bg-secondary: 23 30 25;
+  --color-bg-card: 28 37 32;
+  --color-forest: 41 76 57;
+  --color-sage: 109 153 120;
+  --color-coffee: 96 69 52;
+  --color-ivory: 241 238 228;
+  --color-muted: 164 173 164;
+  --color-border-subtle: 48 58 51;
 
   --radius-anteiku: 0.625rem;
   --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="github"] {
+  --color-bg-primary: 0 0 0;
+  --color-bg-secondary: 5 8 6;
+  --color-bg-card: 10 18 12;
+  --color-forest: 20 110 54;
+  --color-sage: 57 255 117;
+  --color-coffee: 31 78 46;
+  --color-ivory: 238 255 242;
+  --color-muted: 143 176 151;
+  --color-border-subtle: 22 52 31;
+}
+
+:root[data-theme="godzilla"] {
+  --color-bg-primary: 0 3 8;
+  --color-bg-secondary: 2 10 20;
+  --color-bg-card: 5 17 29;
+  --color-forest: 0 91 140;
+  --color-sage: 0 214 255;
+  --color-coffee: 10 58 98;
+  --color-ivory: 231 250 255;
+  --color-muted: 147 190 207;
+  --color-border-subtle: 20 65 87;
+}
+
+:root[data-theme="starry"] {
+  --color-bg-primary: 4 2 12;
+  --color-bg-secondary: 12 6 29;
+  --color-bg-card: 22 12 48;
+  --color-forest: 89 25 145;
+  --color-sage: 204 79 255;
+  --color-coffee: 79 36 124;
+  --color-ivory: 247 240 255;
+  --color-muted: 183 163 211;
+  --color-border-subtle: 66 41 105;
+}
+
+:root[data-theme="light"] {
+  --color-bg-primary: 248 246 240;
+  --color-bg-secondary: 237 233 224;
+  --color-bg-card: 255 253 248;
+  --color-forest: 39 103 71;
+  --color-sage: 47 126 82;
+  --color-coffee: 122 83 52;
+  --color-ivory: 27 32 28;
+  --color-muted: 93 101 94;
+  --color-border-subtle: 203 198 188;
 }
 
 @media (prefers-reduced-motion: reduce) {

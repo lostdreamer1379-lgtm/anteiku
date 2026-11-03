@@ -6,17 +6,17 @@ export default {
     extend: {
       colors: {
         bg: {
-          primary: "#101511",
-          secondary: "#171E19",
-          card: "#1C2520",
+          primary: "rgb(var(--color-bg-primary) / <alpha-value>)",
+          secondary: "rgb(var(--color-bg-secondary) / <alpha-value>)",
+          card: "rgb(var(--color-bg-card) / <alpha-value>)",
         },
-        forest: "#294C39",
-        sage: "#6D9978",
-        coffee: "#604534",
-        ivory: "#F1EEE4",
-        muted: "#A4ADA4",
+        forest: "rgb(var(--color-forest) / <alpha-value>)",
+        sage: "rgb(var(--color-sage) / <alpha-value>)",
+        coffee: "rgb(var(--color-coffee) / <alpha-value>)",
+        ivory: "rgb(var(--color-ivory) / <alpha-value>)",
+        muted: "rgb(var(--color-muted) / <alpha-value>)",
         border: {
-          subtle: "#303A33",
+          subtle: "rgb(var(--color-border-subtle) / <alpha-value>)",
         },
       },
       fontFamily: {

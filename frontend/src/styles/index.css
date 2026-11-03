@@ -8,15 +8,17 @@ html {
 }
 
 body {
-  background-color: var(--color-bg-primary);
+  background-color: rgb(var(--color-bg-primary));
+  color: rgb(var(--color-ivory));
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 ::selection {
-  background-color: var(--color-forest);
-  color: var(--color-ivory);
+  background-color: rgb(var(--color-forest));
+  color: rgb(var(--color-ivory));
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-sage);
+  outline: 2px solid rgb(var(--color-sage));
   outline-offset: 2px;
 }

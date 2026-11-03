@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check, Palette } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import FormField from "@/components/ui/FormField";
 import { apiFetch } from "@/services/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { themes, useTheme } from "@/contexts/ThemeContext";
 
 const schema = z.object({
   username: z
@@ -27,6 +29,7 @@ interface ProfileData {
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const qc = useQueryClient();
   const [saved, setSaved] = useState(false);
 
@@ -107,6 +110,51 @@ export default function Profile() {
           {mutation.isPending ? "Saving…" : saved ? "Saved ✓" : "Save changes"}
         </button>
       </form>
+
+      <section className="mt-10 border-t border-border-subtle pt-8" aria-labelledby="theme-heading">
+        <div className="flex items-start gap-3">
+          <div className="rounded-full border border-border-subtle bg-bg-secondary p-2 text-sage">
+            <Palette size={18} aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-sage">Appearance</p>
+            <h2 id="theme-heading" className="mt-1 font-serif text-xl text-ivory">Choose your theme</h2>
+            <p className="mt-1 text-sm text-muted">Your choice is saved on this device.</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {themes.map((option) => {
+            const isSelected = option.id === theme;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setTheme(option.id)}
+                className={`group rounded-anteiku border p-3 text-left transition-[border-color,background-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-sage/70 ${isSelected ? "border-sage bg-bg-secondary shadow-[var(--shadow-soft)]" : "border-border-subtle bg-bg-card"}`}
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex shrink-0 overflow-hidden rounded-full border border-white/15">
+                      {option.swatches.map((swatch) => (
+                        <span key={swatch} className="h-5 w-5" style={{ backgroundColor: swatch }} />
+                      ))}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-ivory">{option.name}</span>
+                      <span className="mt-0.5 block truncate text-xs text-muted">{option.description}</span>
+                    </span>
+                  </span>
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${isSelected ? "border-sage bg-sage text-bg-primary" : "border-border-subtle text-transparent"}`}>
+                    <Check size={14} strokeWidth={3} aria-hidden="true" />
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="mt-10 border-t border-border-subtle pt-8">
         <button

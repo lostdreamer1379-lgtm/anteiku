@@ -1,0 +1,24 @@
+/* ANTEIKU design tokens — Japanese cafe warmth meets dark cinematic anime aesthetics */
+:root {
+  --color-bg-primary: #101511;
+  --color-bg-secondary: #171e19;
+  --color-bg-card: #1c2520;
+  --color-forest: #294c39;
+  --color-sage: #6d9978;
+  --color-coffee: #604534;
+  --color-ivory: #f1eee4;
+  --color-muted: #a4ada4;
+  --color-border-subtle: #303a33;
+
+  --radius-anteiku: 0.625rem;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

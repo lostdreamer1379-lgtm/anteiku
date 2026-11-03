@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Mirrors a Supabase Auth user. The id is the Supabase Auth UUID — Anteiku
+/// does not maintain its own separate identity/credential store.
+model Profile {
+  id        String   @id @db.Uuid
+  username  String?  @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  watchlist WatchlistEntry[]
+  progress  WatchProgress[]
+}
+
+enum WatchStatus {
+  WATCHING
+  COMPLETED
+  PLANNING
+  PAUSED
+  DROPPED
+}
+
+model WatchlistEntry {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @db.Uuid
+  animeId   Int
+  status    WatchStatus
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+  @@index([userId])
+}
+
+model WatchProgress {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  animeId         Int
+  episodeNumber   Int
+  progressSeconds Int      @default(0)
+  completed       Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId, episodeNumber])
+  @@index([userId])
+}

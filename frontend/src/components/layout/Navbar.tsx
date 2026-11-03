@@ -1,0 +1,164 @@
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import { Search, User, LogOut, Menu, X } from "lucide-react";
+import { useState, useRef } from "react";
+import clsx from "clsx";
+import { useAuth } from "@/contexts/AuthContext";
+
+const links = [
+  { to: "/", label: "Home" },
+  { to: "/explore", label: "Explore" },
+  { to: "/seasonal", label: "Seasonal" },
+  { to: "/watchlist", label: "Watchlist" },
+];
+
+export default function Navbar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  async function handleSignOut() {
+    await signOut();
+    setUserMenuOpen(false);
+    navigate("/");
+  }
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border-subtle/60 bg-bg-primary/90 backdrop-blur">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
+        <Link to="/" className="flex items-center gap-2 font-serif text-lg tracking-wide text-ivory">
+          <span className="h-2 w-2 rounded-full bg-sage" aria-hidden />
+          ANTEIKU
+        </Link>
+
+        <div className="hidden items-center gap-8 md:flex">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                clsx(
+                  "text-sm tracking-wide text-muted transition-colors hover:text-ivory",
+                  isActive && "text-ivory"
+                )
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => navigate("/explore")}
+            className="rounded-anteiku p-2 text-muted transition-colors hover:bg-bg-card hover:text-ivory"
+          >
+            <Search size={18} />
+          </button>
+
+          {user ? (
+            <div className="relative hidden md:block" ref={userMenuRef}>
+              <button
+                type="button"
+                aria-label="User menu"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-forest text-ivory text-xs font-medium hover:bg-sage hover:text-bg-primary transition-colors"
+              >
+                {user.email?.[0]?.toUpperCase() ?? <User size={14} />}
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-anteiku border border-border-subtle bg-bg-card py-1 shadow-soft">
+                  <p className="px-4 py-2 text-xs text-muted truncate">{user.email}</p>
+                  <div className="my-1 h-px bg-border-subtle/60" />
+                  <Link
+                    to="/profile"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-ivory hover:bg-forest/50"
+                  >
+                    <User size={14} /> Profile
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted hover:bg-forest/50 hover:text-ivory"
+                  >
+                    <LogOut size={14} /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/signin"
+              className="hidden rounded-anteiku border border-border-subtle px-4 py-1.5 text-sm text-muted transition-colors hover:border-sage hover:text-ivory md:inline-flex"
+            >
+              Sign in
+            </Link>
+          )}
+
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            className="rounded-anteiku p-2 text-muted hover:bg-bg-card hover:text-ivory md:hidden"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </nav>
+
+      {open && (
+        <div className="border-t border-border-subtle/60 px-5 pb-4 pt-2 md:hidden">
+          <div className="flex flex-col gap-1">
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  clsx(
+                    "rounded-anteiku px-3 py-2.5 text-sm text-muted hover:bg-bg-card hover:text-ivory",
+                    isActive && "bg-bg-card text-ivory"
+                  )
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+            {user ? (
+              <>
+                <Link
+                  to="/profile"
+                  onClick={() => setOpen(false)}
+                  className="rounded-anteiku px-3 py-2.5 text-sm text-muted hover:bg-bg-card hover:text-ivory"
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => { await handleSignOut(); setOpen(false); }}
+                  className="rounded-anteiku px-3 py-2.5 text-left text-sm text-muted hover:bg-bg-card hover:text-ivory"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/signin"
+                onClick={() => setOpen(false)}
+                className="rounded-anteiku px-3 py-2.5 text-sm text-muted hover:bg-bg-card hover:text-ivory"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}

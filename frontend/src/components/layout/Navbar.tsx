@@ -2,6 +2,7 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Search, User, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import clsx from "clsx";
+import { LayoutGroup, motion } from "motion/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSearchAnime } from "@/hooks/useSearchAnime";
@@ -59,22 +60,35 @@ export default function Navbar() {
           ANTEIKU
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
-          {links.map((link) => (
+        <LayoutGroup id="main-navigation">
+          <div className="hidden items-center gap-8 md:flex">
+            {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 clsx(
-                  "text-sm tracking-wide text-muted transition-colors hover:text-ivory",
-                  isActive && "text-ivory"
+                  "relative py-5 text-sm tracking-wide text-muted transition-colors hover:text-ivory",
+                  isActive && "text-ivory",
                 )
               }
             >
-              {link.label}
+              {({ isActive }) => (
+                <>
+                  {link.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="active-navigation-slider"
+                      transition={{ type: "spring", stiffness: 460, damping: 34, mass: 0.7 }}
+                      className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-sage shadow-[0_0_12px_rgb(var(--color-sage)/0.7)]"
+                    />
+                  )}
+                </>
+              )}
             </NavLink>
-          ))}
-        </div>
+            ))}
+          </div>
+        </LayoutGroup>
 
         <div className="flex items-center gap-3">
           <form ref={searchRef} onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">

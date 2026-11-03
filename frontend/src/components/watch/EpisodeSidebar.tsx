@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, ListVideo } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { WatchProgressEntry } from "@/types/anime";
@@ -13,6 +14,59 @@ interface EpisodeSidebarProps {
   onToggle: () => void;
   progressFor: (animeId: number, episodeNumber: number) => WatchProgressEntry | undefined;
   isSignedIn: boolean;
+}
+
+function EpisodeItem({
+  animeId,
+  episode,
+  animeTitle,
+  coverImage,
+  description,
+  isCurrent,
+  progress,
+}: {
+  animeId: number;
+  episode: number;
+  animeTitle: string;
+  coverImage: string;
+  description: string;
+  isCurrent: boolean;
+  progress: WatchProgressEntry | undefined;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className={`rounded-md border p-2 transition-colors ${isCurrent ? "border-sage/70 bg-forest/45" : "border-transparent hover:border-border-subtle hover:bg-bg-secondary"}`}>
+      <Link
+        to={`/watch/${animeId}/${episode}`}
+        aria-current={isCurrent ? "page" : undefined}
+        className="group flex min-w-0 gap-3"
+      >
+        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded bg-bg-secondary sm:h-[4.5rem] sm:w-28">
+          {coverImage ? (
+            <img src={coverImage} alt="" loading="lazy" onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          ) : <div className="h-full w-full bg-bg-secondary" />}
+          <span className="absolute bottom-1 left-1 rounded bg-bg-primary/85 px-1.5 py-0.5 text-[0.65rem] font-medium text-ivory">{episode}</span>
+          {progress && !progress.completed && <span className="absolute inset-x-1 bottom-0.5 h-0.5 overflow-hidden rounded-full bg-white/25"><span className="block h-full w-1/2 rounded-full bg-sage" /></span>}
+        </div>
+        <span className="min-w-0 py-0.5">
+          <span className="block truncate text-sm text-ivory">Episode {episode}</span>
+          <span className={`mt-1 block text-[0.7rem] leading-4 text-muted transition-[max-height,opacity] duration-300 ease-out ${expanded ? "max-h-40 opacity-100" : "line-clamp-2 max-h-8 opacity-90"}`}>
+            Episode {episode} of {animeTitle}. {description}
+          </span>
+          {progress?.completed && <span className="mt-1 block text-[0.65rem] text-sage">Completed</span>}
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="ml-[calc(6rem+0.75rem)] mt-1 text-[0.65rem] font-medium text-sage transition-colors hover:text-ivory sm:ml-[calc(7rem+0.75rem)]"
+      >
+        {expanded ? "Read less" : "Read more"}
+      </button>
+    </div>
+  );
 }
 
 export default function EpisodeSidebar({
@@ -59,46 +113,17 @@ export default function EpisodeSidebar({
               {Array.from({ length: totalEpisodes }, (_, index) => index + 1).map((episode) => {
                 const progress = isSignedIn ? progressFor(animeId, episode) : undefined;
                 const isCurrent = episode === currentEpisode;
-                const episodeDescription = synopsis
-                  ? `Episode ${episode} of ${animeTitle}. ${synopsis}`
-                  : `Continue watching ${animeTitle}, episode ${episode}.`;
-
                 return (
-                  <Link
+                  <EpisodeItem
                     key={episode}
-                    to={`/watch/${animeId}/${episode}`}
-                    aria-current={isCurrent ? "page" : undefined}
-                    className={`group flex min-w-0 gap-3 rounded-md border p-2 transition-colors ${
-                      isCurrent
-                        ? "border-sage/70 bg-forest/45"
-                        : "border-transparent hover:border-border-subtle hover:bg-bg-secondary"
-                    }`}
-                  >
-                    <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded bg-bg-secondary sm:h-[4.5rem] sm:w-28">
-                      {coverImage ? (
-                        <img
-                          src={coverImage}
-                          alt=""
-                          loading="lazy"
-                          onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : <div className="h-full w-full bg-bg-secondary" />}
-                      <span className="absolute bottom-1 left-1 rounded bg-bg-primary/85 px-1.5 py-0.5 text-[0.65rem] font-medium text-ivory">
-                        {episode}
-                      </span>
-                      {progress && !progress.completed && (
-                        <span className="absolute inset-x-1 bottom-0.5 h-0.5 overflow-hidden rounded-full bg-white/25">
-                          <span className="block h-full w-1/2 rounded-full bg-sage" />
-                        </span>
-                      )}
-                    </div>
-                    <span className="min-w-0 py-0.5">
-                      <span className="block truncate text-sm text-ivory">Episode {episode}</span>
-                      <span className="mt-1 block line-clamp-2 text-[0.7rem] leading-4 text-muted">{episodeDescription}</span>
-                      {progress?.completed && <span className="mt-1 block text-[0.65rem] text-sage">Completed</span>}
-                    </span>
-                  </Link>
+                    animeId={animeId}
+                    episode={episode}
+                    animeTitle={animeTitle}
+                    coverImage={coverImage}
+                    description={synopsis ?? `Continue watching ${animeTitle}, episode ${episode}.`}
+                    isCurrent={isCurrent}
+                    progress={progress}
+                  />
                 );
               })}
             </div>

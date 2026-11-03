@@ -86,11 +86,11 @@ function HeroWheel({ items, selectedIndex, onChange }: {
 
   const step = 360 / items.length;
   const rotation = -(selectedIndex * step);
-  const phaseScale = phase === "focus" ? "scale-[1.02]" : "scale-[0.7]";
+  const phaseScale = phase === "focus" ? "scale-[1.08]" : "scale-[0.78]";
 
   return (
     <div
-      className="relative mx-auto h-[18rem] w-full max-w-[24rem] touch-pan-y select-none sm:h-[24rem] sm:max-w-[30rem]"
+      className="relative mx-auto h-[22rem] w-full max-w-[48rem] touch-pan-y select-none sm:h-[34rem]"
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
         dragStart.current = event.clientX;
@@ -122,11 +122,12 @@ function HeroWheel({ items, selectedIndex, onChange }: {
                 key={anime.id}
                 to={`/anime/${anime.id}`}
                 aria-label={`View ${title}`}
-                className="absolute left-1/2 top-1/2 h-40 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-anteiku border border-ivory/15 bg-bg-card shadow-[0_18px_35px_rgba(0,0,0,0.45)] transition-[filter,opacity] duration-500 sm:h-52 sm:w-36"
+                className="absolute left-1/2 top-1/2 h-44 w-28 overflow-hidden rounded-anteiku border-2 border-ivory/20 bg-bg-card shadow-[0_22px_45px_rgba(0,0,0,0.5)] transition-[filter,opacity,transform] duration-700 sm:h-60 sm:w-40 md:h-64 md:w-44"
                 style={{
-                  transform: `rotateY(${index * step}deg) translateZ(clamp(7.2rem, 23vw, 12.5rem))`,
+                  transform: `translate(-50%, -50%) rotateY(${index * step}deg) translateZ(clamp(13rem, 29vw, 22rem))`,
                   backfaceVisibility: "hidden",
                   opacity: index === selectedIndex ? 1 : 0.82,
+                  zIndex: index === selectedIndex ? 2 : 1,
                 }}
               >
                 <img src={anime.coverImage} alt="" draggable={false} className="h-full w-full object-cover" />
@@ -223,7 +224,7 @@ export default function Home() {
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-border-subtle/60">
-        <div className="relative mx-auto grid min-h-[60vh] max-w-7xl items-center gap-8 px-5 py-12 md:grid-cols-[minmax(0,0.9fr)_minmax(22rem,1.1fr)] md:px-8 md:py-16">
+        <div className="relative mx-auto grid min-h-[calc(100svh-4rem)] max-w-[1600px] items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:px-10 md:py-12 lg:gap-12">
           {hero?.bannerImage && (
             <img
               src={hero.bannerImage}

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export const themes = [
-  { id: "cappuccino", name: "Cappuccino", description: "Warm café brown and forest green", swatches: ["#101511", "#294c39", "#f1eee4"] },
+  { id: "cappuccino", name: "Cappuccino", description: "Cozy espresso, caramel and cream", swatches: ["#18110f", "#d69c65", "#faedd8"] },
   { id: "github", name: "GitHub AMOLED", description: "Vibrant green on true black", swatches: ["#000000", "#39ff75", "#eefff2"] },
   { id: "godzilla", name: "Godzilla AMOLED", description: "Neon blue against deep black", swatches: ["#000308", "#00d6ff", "#e7faff"] },
   { id: "starry", name: "Starry Night", description: "Vibrant purple and AMOLED black", swatches: ["#04020c", "#cc4fff", "#f7f0ff"] },

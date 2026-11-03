@@ -1,15 +1,15 @@
 /* ANTEIKU design tokens — Japanese cafe warmth meets dark cinematic anime aesthetics */
 :root,
 :root[data-theme="cappuccino"] {
-  --color-bg-primary: 16 21 17;
-  --color-bg-secondary: 23 30 25;
-  --color-bg-card: 28 37 32;
-  --color-forest: 41 76 57;
-  --color-sage: 109 153 120;
-  --color-coffee: 96 69 52;
-  --color-ivory: 241 238 228;
-  --color-muted: 164 173 164;
-  --color-border-subtle: 48 58 51;
+  --color-bg-primary: 24 17 15;
+  --color-bg-secondary: 38 25 20;
+  --color-bg-card: 51 33 25;
+  --color-forest: 103 65 43;
+  --color-sage: 214 156 101;
+  --color-coffee: 126 78 47;
+  --color-ivory: 250 237 216;
+  --color-muted: 190 165 140;
+  --color-border-subtle: 86 57 40;
 
   --radius-anteiku: 0.625rem;
   --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -61,6 +61,13 @@
   --color-ivory: 27 32 28;
   --color-muted: 93 101 94;
   --color-border-subtle: 203 198 188;
+}
+
+:root[data-theme="cappuccino"] body {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgb(214 156 101 / 0.11), transparent 28rem),
+    radial-gradient(circle at 88% 72%, rgb(126 78 47 / 0.13), transparent 34rem);
+  background-attachment: fixed;
 }
 
 @media (prefers-reduced-motion: reduce) {

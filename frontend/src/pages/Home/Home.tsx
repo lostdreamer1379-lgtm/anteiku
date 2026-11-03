@@ -1,6 +1,11 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useHomeCarousels } from "@/hooks/useHomeCarousels";
+import { useSearchAnime } from "@/hooks/useSearchAnime";
 import PosterCarousel from "@/components/anime/PosterCarousel";
+import PosterCard from "@/components/anime/PosterCard";
+import PosterCardSkeleton from "@/components/ui/PosterCardSkeleton";
 
 const genres = [
   "Action", "Adventure", "Romance", "Psychological", "Thriller",
@@ -8,15 +13,76 @@ const genres = [
 ];
 
 const collections = [
-  { title: "After Dark", blurb: "Stories best watched once the lights are low." },
-  { title: "Quiet Evenings", blurb: "Slow, warm, unhurried watches." },
-  { title: "Psychological Depths", blurb: "Minds unravelling, one episode at a time." },
-  { title: "Timeless Classics", blurb: "The ones that started it all." },
-  { title: "Beyond Reality", blurb: "Worlds that don't play by our rules." },
+  {
+    title: "After Dark",
+    blurb: "Stories best watched once the lights are low.",
+    genres: ["Mystery", "Thriller"],
+  },
+  {
+    title: "Quiet Evenings",
+    blurb: "Slow, warm, unhurried watches.",
+    genres: ["Slice of Life", "Romance"],
+  },
+  {
+    title: "Psychological Depths",
+    blurb: "Minds unravelling, one episode at a time.",
+    genres: ["Psychological"],
+  },
+  {
+    title: "Timeless Classics",
+    blurb: "The ones that started it all.",
+    genres: ["Drama"],
+    sort: ["SCORE_DESC"],
+  },
+  {
+    title: "Beyond Reality",
+    blurb: "Worlds that don't play by our rules.",
+    genres: ["Fantasy", "Sci-Fi"],
+  },
 ];
+
+type Collection = (typeof collections)[number];
+
+function CollectionResults({ collection, isOpen }: { collection: Collection; isOpen: boolean }) {
+  const query = useSearchAnime(
+    {
+      genre: collection.genres,
+      sort: collection.sort ?? ["POPULARITY_DESC"],
+      perPage: 24,
+    },
+    isOpen,
+  );
+
+  return (
+    <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+      <div className="min-h-0 overflow-hidden">
+        <div className="border-t border-border-subtle/70 px-4 pb-5 pt-4 sm:px-5">
+          {query.isLoading ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <PosterCardSkeleton key={index} variant="grid" />
+              ))}
+            </div>
+          ) : query.isError ? (
+            <p className="text-sm text-muted">We could not load this collection. Please try again.</p>
+          ) : query.data?.results.length ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+              {query.data.results.map((anime) => (
+                <PosterCard key={anime.id} anime={anime} variant="grid" />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Nothing here yet.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { trending, airing, seasonal } = useHomeCarousels();
+  const [openCollection, setOpenCollection] = useState<string | null>(null);
   const hero = trending.data?.[0];
 
   return (
@@ -92,15 +158,32 @@ export default function Home() {
         <p className="mb-5 max-w-xl text-sm text-muted">
           Hand-picked groupings for a mood, not an official classification.
         </p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {collections.map((c) => (
-            <div
+            <article
               key={c.title}
-              className="rounded-anteiku border border-border-subtle bg-bg-card p-5 transition-colors hover:border-sage/60"
+              className={`overflow-hidden rounded-anteiku border bg-bg-card transition-[border-color,box-shadow] duration-300 ${openCollection === c.title ? "border-sage/70 shadow-[var(--shadow-soft)] lg:col-span-3" : "border-border-subtle hover:border-sage/60"}`}
             >
-              <p className="font-serif text-lg text-ivory">{c.title}</p>
-              <p className="mt-1.5 text-sm text-muted">{c.blurb}</p>
-            </div>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5"
+                aria-expanded={openCollection === c.title}
+                aria-controls={`collection-${c.title.replaceAll(" ", "-").toLowerCase()}`}
+                onClick={() => setOpenCollection((current) => current === c.title ? null : c.title)}
+              >
+                <span>
+                  <span className="block font-serif text-lg text-ivory">{c.title}</span>
+                  <span className="mt-1.5 block text-sm text-muted">{c.blurb}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2 text-xs uppercase tracking-[0.16em] text-sage">
+                  <span className="hidden sm:inline">{openCollection === c.title ? "Close" : "Explore"}</span>
+                  <ChevronDown size={18} className={`transition-transform duration-500 ${openCollection === c.title ? "rotate-180" : ""}`} aria-hidden />
+                </span>
+              </button>
+              <div id={`collection-${c.title.replaceAll(" ", "-").toLowerCase()}`}>
+                <CollectionResults collection={c} isOpen={openCollection === c.title} />
+              </div>
+            </article>
           ))}
         </div>
       </section>

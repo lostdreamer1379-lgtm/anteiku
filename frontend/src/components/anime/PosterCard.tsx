@@ -2,13 +2,19 @@ import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import type { AnimeSummary } from "@/types/anime";
 
-export default function PosterCard({ anime }: { anime: AnimeSummary }) {
+export default function PosterCard({
+  anime,
+  variant = "carousel",
+}: {
+  anime: AnimeSummary;
+  variant?: "carousel" | "grid";
+}) {
   const title = anime.title.english ?? anime.title.romaji;
 
   return (
     <Link
       to={`/anime/${anime.id}`}
-      className="group w-40 shrink-0 md:w-48"
+      className={`group ${variant === "grid" ? "min-w-0" : "w-40 shrink-0 md:w-48"}`}
       aria-label={title}
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-anteiku bg-bg-card">

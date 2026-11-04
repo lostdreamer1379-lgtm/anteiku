@@ -59,7 +59,7 @@ export default function Player({
 
   const provider = resolveProvider();
   const src = provider.enabled ? provider.getEmbedUrl(episode, { dub }) : null;
-  const iframeRemoteCommand = remotePartyCommand && remotePartyCommand.action !== "end"
+  const iframeRemoteCommand = remotePartyCommand && remotePartyCommand.action !== "end" && remotePartyCommand.action !== "episode"
     ? { ...remotePartyCommand, id: remoteCommandId }
     : undefined;
 
@@ -160,7 +160,7 @@ export default function Player({
   }
 
   useEffect(() => {
-    if (!remotePartyCommand || remotePartyCommand.action === "end") return;
+    if (!remotePartyCommand || remotePartyCommand.action === "end" || remotePartyCommand.action === "episode") return;
     if (provider.kind === "video") {
       const video = videoRef.current;
       if (!video) return;

@@ -5,6 +5,7 @@ export type WatchPartyCommand =
   | { action: "play"; position: number }
   | { action: "pause"; position: number }
   | { action: "seek"; position: number }
+  | { action: "episode"; episode: number }
   | { action: "end" };
 
 export interface WatchPartyParticipant {
@@ -43,13 +44,14 @@ export function useWatchParty(
       setParticipants(next);
     });
     channel.on("broadcast", { event: "command" }, ({ payload }) => {
-      if (payload?.animeId !== animeId || payload?.episode !== episode || !payload?.command) return;
+      if (payload?.animeId !== animeId || !payload?.command) return;
       const command = payload.command as WatchPartyCommand;
       if (command.action === "end") {
         setEnded(true);
         setRoom("");
         return;
       }
+      if (command.action !== "episode" && payload?.episode !== episode) return;
       onCommandRef.current(command);
     }).subscribe((status) => {
       const joined = status === "SUBSCRIBED";
@@ -62,7 +64,7 @@ export function useWatchParty(
       setConnected(false);
       setParticipants([]);
     };
-  }, [animeId, isHost, participant, room]);
+  }, [animeId, episode, isHost, participant, room]);
 
   const createParty = useCallback(() => {
     const nextRoom = createRoomId();

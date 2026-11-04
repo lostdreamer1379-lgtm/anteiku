@@ -264,16 +264,31 @@ function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
         if (dragStart.current !== null) {
           const distance = event.clientX - dragStart.current;
           const projectedRotation = distance * 0.42 + dragVelocity.current * 140;
-          const targetIndex = (selectedIndex - Math.round(projectedRotation / step) + items.length) % items.length;
+          const momentumRotation = Math.max(-step * 4, Math.min(step * 4, projectedRotation));
+          const targetIndex = (selectedIndex - Math.round(momentumRotation / step) + items.length) % items.length;
           const targetOffset = -(targetIndex - selectedIndex) * step;
+          const highMomentum = Math.abs(dragVelocity.current) > 0.35;
           triggerHaptic(targetIndex);
-          setDragRotation(targetIndex === selectedIndex && Math.abs(distance) < 22 ? 0 : targetOffset);
           setIsDragging(false);
-          window.setTimeout(() => {
-            onChange(targetIndex);
-            onPreview?.(targetIndex);
-            setDragRotation(0);
-          }, 520);
+          if (highMomentum) {
+            setPhase("zoom-out");
+            setDragRotation(momentumRotation);
+            const glideTimer = window.setTimeout(() => {
+              onChange(targetIndex);
+              onPreview?.(targetIndex);
+              setDragRotation(0);
+            }, 620);
+            const focusTimer = window.setTimeout(() => setPhase("focus"), 820);
+            timers.current.push(glideTimer, focusTimer);
+          } else {
+            setDragRotation(targetIndex === selectedIndex && Math.abs(distance) < 22 ? 0 : targetOffset);
+            const settleTimer = window.setTimeout(() => {
+              onChange(targetIndex);
+              onPreview?.(targetIndex);
+              setDragRotation(0);
+            }, 520);
+            timers.current.push(settleTimer);
+          }
         }
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
@@ -308,7 +323,7 @@ function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
     >
       <div className={`absolute inset-0 transition-transform duration-500 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
         <div
-          className={`absolute inset-0 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] ${isDragging ? "transition-none" : "transition-transform duration-500"}`}
+          className={`absolute inset-0 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] ${isDragging ? "transition-none" : phase === "zoom-out" ? "transition-transform duration-700" : "transition-transform duration-500"}`}
           style={{ transform: `rotateY(${rotation}deg)` }}
         >
           {items.map((anime, index) => {

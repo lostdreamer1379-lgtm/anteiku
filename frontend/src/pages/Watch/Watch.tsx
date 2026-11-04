@@ -31,7 +31,22 @@ export default function Watch() {
   }) : undefined, [user]);
   const party = useWatchParty(animeId, episodeNumber, partyRoom, participant);
 
-  useEffect(() => party.onCommand(setRemotePartyCommand), [party]);
+  function navigateToEpisode(nextEpisode: number, broadcast = true) {
+    if (nextEpisode < 1 || (anime?.episodes && nextEpisode > anime.episodes)) return;
+    if (broadcast && partyRoom) party.send({ action: "episode", episode: nextEpisode });
+    const next = new URLSearchParams(searchParams);
+    if (partyRoom) next.set("party", partyRoom);
+    else next.delete("party");
+    navigate(`/watch/${animeId}/${nextEpisode}?${next.toString()}`);
+  }
+
+  useEffect(() => party.onCommand((command) => {
+    if (command.action === "episode") {
+      navigateToEpisode(command.episode, false);
+      return;
+    }
+    setRemotePartyCommand(command);
+  }), [party]);
   useEffect(() => {
     if (!party.ended || !partyRoom) return;
     const next = new URLSearchParams(searchParams);
@@ -96,7 +111,7 @@ export default function Watch() {
       completed: true,
     });
     if (episodeNumber < totalEpisodes) {
-      navigate(`/watch/${animeId}/${episodeNumber + 1}`);
+      navigateToEpisode(episodeNumber + 1);
     }
   }
 
@@ -183,8 +198,8 @@ export default function Watch() {
             onProgressUpdate={handleProgressUpdate}
             onEpisodeComplete={handleEpisodeComplete}
             onExit={() => navigate(`/anime/${animeId}`)}
-            onPrevEpisode={episodeNumber > 1 ? () => navigate(`/watch/${animeId}/${episodeNumber - 1}`) : undefined}
-            onNextEpisode={episodeNumber < totalEpisodes ? () => navigate(`/watch/${animeId}/${episodeNumber + 1}`) : undefined}
+            onPrevEpisode={episodeNumber > 1 ? () => navigateToEpisode(episodeNumber - 1) : undefined}
+            onNextEpisode={episodeNumber < totalEpisodes ? () => navigateToEpisode(episodeNumber + 1) : undefined}
             onPartyEvent={partyRoom ? party.send : undefined}
             remotePartyCommand={remotePartyCommand}
           />

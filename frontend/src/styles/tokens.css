@@ -20,9 +20,9 @@
   --color-bg-secondary: 5 8 6;
   --color-bg-card: 10 18 12;
   --color-forest: 20 110 54;
-  --color-sage: 57 255 117;
+  --color-sage: 29 230 96;
   --color-coffee: 31 78 46;
-  --color-ivory: 238 255 242;
+  --color-ivory: 241 247 242;
   --color-muted: 143 176 151;
   --color-border-subtle: 22 52 31;
 }
@@ -32,7 +32,7 @@
   --color-bg-secondary: 2 10 20;
   --color-bg-card: 5 17 29;
   --color-forest: 0 91 140;
-  --color-sage: 0 214 255;
+  --color-sage: 0 38 255;
   --color-coffee: 10 58 98;
   --color-ivory: 231 250 255;
   --color-muted: 147 190 207;
@@ -44,7 +44,7 @@
   --color-bg-secondary: 12 6 29;
   --color-bg-card: 22 12 48;
   --color-forest: 89 25 145;
-  --color-sage: 204 79 255;
+  --color-sage: 93 37 245;
   --color-coffee: 79 36 124;
   --color-ivory: 247 240 255;
   --color-muted: 183 163 211;
@@ -58,7 +58,7 @@
   --color-forest: 39 103 71;
   --color-sage: 47 126 82;
   --color-coffee: 122 83 52;
-  --color-ivory: 27 32 28;
+  --color-ivory: 45 49 46;
   --color-muted: 93 101 94;
   --color-border-subtle: 203 198 188;
 }

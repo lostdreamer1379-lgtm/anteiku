@@ -32,10 +32,12 @@ export default function Watch() {
     isHost: false,
   }) : undefined, [user]);
   const party = useWatchParty(animeId, episodeNumber, partyRoom, participant);
+  const activePartyRoom = party.room || partyRoom;
+  const partyActive = Boolean(activePartyRoom) && !party.ended;
 
   function navigateToEpisode(nextEpisode: number, broadcast = true) {
     if (nextEpisode < 1 || (anime?.episodes && nextEpisode > anime.episodes)) return;
-    if (broadcast && partyRoom) party.send({ action: "episode", episode: nextEpisode });
+    if (broadcast && partyActive) party.send({ action: "episode", episode: nextEpisode });
     const next = new URLSearchParams(searchParams);
     if (partyRoom) next.set("party", partyRoom);
     else next.delete("party");
@@ -43,14 +45,14 @@ export default function Watch() {
   }
 
   function navigateToAnime(nextAnimeId: number, nextEpisode = 1, broadcast = true) {
-    if (partyRoom && continueParty && broadcast) {
+    if (partyActive && continueParty && broadcast) {
       party.send({ action: "anime", animeId: nextAnimeId, episode: nextEpisode });
-    } else if (partyRoom && broadcast) {
+    } else if (partyActive && broadcast) {
       party.endParty();
       setPartyNotice("The watch party ended because a participant switched anime.");
     }
     const next = new URLSearchParams(searchParams);
-    if (partyRoom && continueParty) next.set("party", partyRoom);
+    if (partyActive && continueParty) next.set("party", activePartyRoom!);
     else next.delete("party");
     navigate(`/watch/${nextAnimeId}/${nextEpisode}?${next.toString()}`);
   }
@@ -177,9 +179,9 @@ export default function Watch() {
           <div>
             <p className="text-sm font-medium text-ivory">Watch party</p>
             <p className="text-xs text-muted">
-              {partyRoom ? (party.connected ? "Connected — playback is synced" : "Connecting to party…") : "Watch this episode together in real time"}
+            {partyActive ? (party.connected ? "Connected — playback is synced" : "Connecting to party…") : "Watch this episode together in real time"}
             </p>
-            {partyRoom && party.participants.length > 0 && (
+            {partyActive && party.participants.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5" aria-label="People in this watch party">
                 {party.participants.map((person) => (
                   <span key={person.id} title={person.account} className="rounded-full border border-border-subtle bg-bg-secondary px-2 py-0.5 text-[11px] text-muted">
@@ -188,7 +190,7 @@ export default function Watch() {
                 ))}
               </div>
             )}
-            {partyRoom && (
+            {partyActive && (
               <button
                 type="button"
                 aria-pressed={continueParty}
@@ -200,7 +202,7 @@ export default function Watch() {
             )}
           </div>
         </div>
-        {partyRoom ? (
+        {partyActive ? (
           <div className="flex items-center gap-2">
             <button type="button" onClick={copyPartyLink} className="flex items-center gap-2 rounded-full border border-sage px-3 py-1.5 text-xs text-sage hover:bg-forest">
               {inviteCopied ? <Check size={14} /> : <LinkIcon size={14} />}
@@ -240,7 +242,7 @@ export default function Watch() {
             onExit={() => navigate(`/anime/${animeId}`)}
             onPrevEpisode={episodeNumber > 1 ? () => navigateToEpisode(episodeNumber - 1) : undefined}
             onNextEpisode={episodeNumber < totalEpisodes ? () => navigateToEpisode(episodeNumber + 1) : undefined}
-            onPartyEvent={partyRoom ? party.send : undefined}
+            onPartyEvent={partyActive ? party.send : undefined}
             remotePartyCommand={remotePartyCommand}
           />
 

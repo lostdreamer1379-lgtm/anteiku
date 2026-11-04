@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Users, Link as LinkIcon, Check } from "lucide-react";
 import Player from "@/components/player/Player";
 import { useAnimeDetails } from "@/hooks/useAnimeDetails";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { resolveProvider } from "@/components/player/providers/PlaybackProvider";
 import EpisodeSidebar from "@/components/watch/EpisodeSidebar";
+import { useWatchParty, type WatchPartyCommand } from "@/hooks/useWatchParty";
 
 export default function Watch() {
   const { id, episode } = useParams();
@@ -16,9 +17,41 @@ export default function Watch() {
   const playbackProvider = resolveProvider();
   const dub = searchParams.get("dub") === "1";
   const [episodesOpen, setEpisodesOpen] = useState(true);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [remotePartyCommand, setRemotePartyCommand] = useState<WatchPartyCommand | undefined>();
 
   const animeId = Number(id);
   const episodeNumber = Number(episode);
+  const partyRoom = searchParams.get("party") || undefined;
+  const party = useWatchParty(animeId, episodeNumber, partyRoom);
+
+  useEffect(() => party.onCommand(setRemotePartyCommand), [party]);
+  useEffect(() => {
+    if (!party.ended || !partyRoom) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("party");
+    setSearchParams(next, { replace: true });
+  }, [party.ended, partyRoom, searchParams, setSearchParams]);
+
+  function startParty() {
+    const room = party.createParty();
+    const next = new URLSearchParams(searchParams);
+    next.set("party", room);
+    setSearchParams(next);
+  }
+
+  function endParty() {
+    party.endParty();
+    const next = new URLSearchParams(searchParams);
+    next.delete("party");
+    setSearchParams(next);
+  }
+
+  async function copyPartyLink() {
+    await navigator.clipboard?.writeText(window.location.href);
+    setInviteCopied(true);
+    window.setTimeout(() => setInviteCopied(false), 1800);
+  }
 
   const { data: anime } = useAnimeDetails(animeId);
   const { query: progressQuery, progressFor, upsert } = useProgress();
@@ -94,6 +127,35 @@ export default function Watch() {
         </div>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-anteiku border border-border-subtle bg-bg-card px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Users size={17} className={party.connected ? "text-sage" : "text-muted"} />
+          <div>
+            <p className="text-sm font-medium text-ivory">Watch party</p>
+            <p className="text-xs text-muted">
+              {partyRoom ? (party.connected ? "Connected — playback is synced" : "Connecting to party…") : "Watch this episode together in real time"}
+            </p>
+          </div>
+        </div>
+        {partyRoom ? (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={copyPartyLink} className="flex items-center gap-2 rounded-full border border-sage px-3 py-1.5 text-xs text-sage hover:bg-forest">
+              {inviteCopied ? <Check size={14} /> : <LinkIcon size={14} />}
+              {inviteCopied ? "Copied" : "Copy invite link"}
+            </button>
+            {party.isHost && (
+              <button type="button" onClick={endParty} className="rounded-full border border-red-400/60 px-3 py-1.5 text-xs text-red-300 hover:bg-red-950/40">
+                End party
+              </button>
+            )}
+          </div>
+        ) : (
+          <button type="button" onClick={startParty} className="flex items-center gap-2 rounded-full bg-sage px-3 py-1.5 text-xs font-medium text-bg-deep hover:bg-sage/90">
+            <Users size={14} /> Start a party
+          </button>
+        )}
+      </div>
+
       <div className="mt-4 grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">
           <Player
@@ -108,6 +170,8 @@ export default function Watch() {
             onExit={() => navigate(`/anime/${animeId}`)}
             onPrevEpisode={episodeNumber > 1 ? () => navigate(`/watch/${animeId}/${episodeNumber - 1}`) : undefined}
             onNextEpisode={episodeNumber < totalEpisodes ? () => navigate(`/watch/${animeId}/${episodeNumber + 1}`) : undefined}
+            onPartyEvent={partyRoom ? party.send : undefined}
+            remotePartyCommand={remotePartyCommand}
           />
 
           <div className="mt-4 flex items-start gap-2 rounded-anteiku border border-border-subtle/60 bg-bg-card px-4 py-3">

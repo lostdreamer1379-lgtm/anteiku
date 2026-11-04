@@ -5,6 +5,7 @@ import PlayerError from "./PlayerError";
 import VidRiftPlayer, { type VidRiftAudioTrack, type VidRiftProgress } from "./VidRiftPlayer";
 import { resolveProvider } from "./providers/PlaybackProvider";
 import type { EpisodeInfo } from "./providers/PlaybackProvider";
+import type { WatchPartyCommand } from "@/hooks/useWatchParty";
 
 interface PlayerProps {
   episode: EpisodeInfo;
@@ -17,6 +18,8 @@ interface PlayerProps {
   onPrevEpisode?: () => void;
   onNextEpisode?: () => void;
   onExit?: () => void;
+  onPartyEvent?: (command: WatchPartyCommand) => void;
+  remotePartyCommand?: WatchPartyCommand;
 }
 
 const PROGRESS_SYNC_INTERVAL_MS = 10_000;
@@ -32,6 +35,8 @@ export default function Player({
   onPrevEpisode,
   onNextEpisode,
   onExit,
+  onPartyEvent,
+  remotePartyCommand,
 }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,9 +54,14 @@ export default function Player({
   const [audioTracks, setAudioTracks] = useState<VidRiftAudioTrack[]>([]);
   const [selectedAudio, setSelectedAudio] = useState("");
   const [key, setKey] = useState(0);
+  const [remoteCommandId, setRemoteCommandId] = useState(0);
+  const applyingRemote = useRef(false);
 
   const provider = resolveProvider();
   const src = provider.enabled ? provider.getEmbedUrl(episode, { dub }) : null;
+  const iframeRemoteCommand = remotePartyCommand && remotePartyCommand.action !== "end"
+    ? { ...remotePartyCommand, id: remoteCommandId }
+    : undefined;
 
   const syncVideoProgress = useCallback(() => {
     const time = videoRef.current?.currentTime ?? 0;
@@ -82,11 +92,13 @@ export default function Player({
   const handleIframePause = useCallback((seconds: number) => {
     setPlaying(false);
     setCurrentTime(seconds);
+    if (applyingRemote.current) applyingRemote.current = false;
+    else onPartyEvent?.({ action: "pause", position: seconds });
     if (seconds > 0) {
       lastIframeSyncAt.current = Date.now();
       onProgressUpdate?.(Math.floor(seconds));
     }
-  }, [onProgressUpdate]);
+  }, [onPartyEvent, onProgressUpdate]);
 
   useEffect(() => {
     if (provider.kind !== "video" || !videoMetadataLoaded || !resumeReady || videoResumeApplied.current) return;
@@ -123,10 +135,12 @@ export default function Player({
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      onPartyEvent?.({ action: "play", position: video.currentTime });
       video.play().then(() => setPlaying(true)).catch(() => {
         setError("The sample video could not start. Check your connection and try again.");
       });
     } else {
+      onPartyEvent?.({ action: "pause", position: video.currentTime });
       video.pause();
       setPlaying(false);
     }
@@ -142,7 +156,24 @@ export default function Player({
     if (!videoRef.current) return;
     videoRef.current.currentTime = Math.max(0, Math.min(seconds, duration));
     setCurrentTime(videoRef.current.currentTime);
+    onPartyEvent?.({ action: "seek", position: videoRef.current.currentTime });
   }
+
+  useEffect(() => {
+    if (!remotePartyCommand || remotePartyCommand.action === "end") return;
+    if (provider.kind === "video") {
+      const video = videoRef.current;
+      if (!video) return;
+      applyingRemote.current = true;
+      video.currentTime = remotePartyCommand.position;
+      if (remotePartyCommand.action === "play") void video.play();
+      if (remotePartyCommand.action === "pause") video.pause();
+      setCurrentTime(video.currentTime);
+    } else {
+      applyingRemote.current = true;
+      setRemoteCommandId((value) => value + 1);
+    }
+  }, [provider.kind, remotePartyCommand]);
 
   function handleFullscreen() {
     if (!containerRef.current) return;
@@ -181,7 +212,11 @@ export default function Player({
           title={episode.title}
           onProgress={handleIframeProgress}
           onPause={handleIframePause}
-          onStarted={() => setPlaying(true)}
+          onStarted={() => {
+            setPlaying(true);
+            if (applyingRemote.current) applyingRemote.current = false;
+            else onPartyEvent?.({ action: "play", position: currentTime });
+          }}
           onEnded={() => {
             setPlaying(false);
             onEpisodeComplete?.();
@@ -190,6 +225,7 @@ export default function Player({
           onReady={() => setLoading(false)}
           onAudioTracks={handleAudioTracks}
           selectedAudio={selectedAudio}
+          remoteCommand={iframeRemoteCommand}
         />
         {audioTracks.length > 0 && (
           <div className="flex items-center gap-2 border-t border-white/10 bg-black/80 px-3 py-2 text-xs text-white backdrop-blur">
@@ -233,8 +269,8 @@ export default function Player({
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
           onError={handleVideoError}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
+          onPlay={() => { setPlaying(true); if (applyingRemote.current) applyingRemote.current = false; }}
+          onPause={() => { setPlaying(false); if (applyingRemote.current) applyingRemote.current = false; }}
           onWaiting={() => setLoading(true)}
           onCanPlay={() => setLoading(false)}
           aria-label={`Episode ${episode.episodeNumber}${episode.title ? ` — ${episode.title}` : ""}`}

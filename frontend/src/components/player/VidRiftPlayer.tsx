@@ -28,6 +28,7 @@ export interface VidRiftPlayerProps {
   onReady?: () => void;
   onAudioTracks?: (tracks: VidRiftAudioTrack[], selected: string) => void;
   selectedAudio?: string;
+  remoteCommand?: { action: "play" | "pause" | "seek"; position: number; id: number };
 }
 
 function isMessageData(value: unknown): value is Record<string, unknown> {
@@ -55,6 +56,7 @@ export default function VidRiftPlayer({
   onReady,
   onAudioTracks,
   selectedAudio,
+  remoteCommand,
 }: VidRiftPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const latestCallbacks = useRef({ onProgress, onPause, onStarted, onEnded, onExit, onReady, onAudioTracks });
@@ -79,6 +81,11 @@ export default function VidRiftPlayer({
   useEffect(() => {
     if (iframeLoaded && selectedAudio) send({ type: "vidrift:set", audio: selectedAudio });
   }, [iframeLoaded, selectedAudio, send]);
+
+  useEffect(() => {
+    if (!iframeLoaded || !remoteCommand) return;
+    send({ type: `vidrift:${remoteCommand.action}`, currentTime: Math.floor(remoteCommand.position) });
+  }, [iframeLoaded, remoteCommand, send]);
 
   useEffect(() => {
     if (!iframeLoaded || !resumeReady || resumeSent.current) return;

@@ -6,6 +6,7 @@ export type WatchPartyCommand =
   | { action: "pause"; position: number }
   | { action: "seek"; position: number }
   | { action: "episode"; episode: number }
+  | { action: "anime"; animeId: number; episode: number }
   | { action: "end" };
 
 export interface WatchPartyParticipant {
@@ -30,6 +31,8 @@ export function useWatchParty(
   const [connected, setConnected] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const onCommandRef = useRef<(command: WatchPartyCommand) => void>(() => undefined);
+  const episodeRef = useRef(episode);
+  episodeRef.current = episode;
   const [isHost, setIsHost] = useState(!roomId);
   const [ended, setEnded] = useState(false);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
@@ -51,7 +54,7 @@ export function useWatchParty(
         setRoom("");
         return;
       }
-      if (command.action !== "episode" && payload?.episode !== episode) return;
+      if (command.action !== "episode" && command.action !== "anime" && payload?.episode !== episodeRef.current) return;
       onCommandRef.current(command);
     }).subscribe((status) => {
       const joined = status === "SUBSCRIBED";
@@ -64,7 +67,7 @@ export function useWatchParty(
       setConnected(false);
       setParticipants([]);
     };
-  }, [animeId, episode, isHost, participant, room]);
+  }, [animeId, isHost, participant, room]);
 
   const createParty = useCallback(() => {
     const nextRoom = createRoomId();
@@ -80,7 +83,7 @@ export function useWatchParty(
   }, [animeId, connected, episode]);
 
   const endParty = useCallback(() => {
-    if (!isHost || !channelRef.current || !connected) return;
+    if (!channelRef.current || !connected) return;
     void channelRef.current.send({
       type: "broadcast",
       event: "command",

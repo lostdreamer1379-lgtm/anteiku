@@ -18,6 +18,8 @@ export default function Watch() {
   const dub = searchParams.get("dub") === "1";
   const [episodesOpen, setEpisodesOpen] = useState(true);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [continueParty, setContinueParty] = useState(true);
+  const [partyNotice, setPartyNotice] = useState<string | null>(null);
   const [remotePartyCommand, setRemotePartyCommand] = useState<WatchPartyCommand | undefined>();
 
   const animeId = Number(id);
@@ -40,13 +42,34 @@ export default function Watch() {
     navigate(`/watch/${animeId}/${nextEpisode}?${next.toString()}`);
   }
 
+  function navigateToAnime(nextAnimeId: number, nextEpisode = 1, broadcast = true) {
+    if (partyRoom && continueParty && broadcast) {
+      party.send({ action: "anime", animeId: nextAnimeId, episode: nextEpisode });
+    } else if (partyRoom && broadcast) {
+      party.endParty();
+      setPartyNotice("The watch party ended because a participant switched anime.");
+    }
+    const next = new URLSearchParams(searchParams);
+    if (partyRoom && continueParty) next.set("party", partyRoom);
+    else next.delete("party");
+    navigate(`/watch/${nextAnimeId}/${nextEpisode}?${next.toString()}`);
+  }
+
   useEffect(() => party.onCommand((command) => {
+    if (command.action === "anime") {
+      setPartyNotice("A party member switched the group to another anime.");
+      navigateToAnime(command.animeId, command.episode, false);
+      return;
+    }
     if (command.action === "episode") {
       navigateToEpisode(command.episode, false);
       return;
     }
     setRemotePartyCommand(command);
   }), [party]);
+  useEffect(() => {
+    if (party.ended) setPartyNotice("The watch party ended because a participant switched anime.");
+  }, [party.ended]);
   useEffect(() => {
     if (!party.ended || !partyRoom) return;
     const next = new URLSearchParams(searchParams);
@@ -165,6 +188,16 @@ export default function Watch() {
                 ))}
               </div>
             )}
+            {partyRoom && (
+              <button
+                type="button"
+                aria-pressed={continueParty}
+                onClick={() => setContinueParty((enabled) => !enabled)}
+                className="mt-2 text-xs text-sage hover:text-ivory"
+              >
+                {continueParty ? "✓ Continue party when changing anime" : "Continue party is off — changing anime ends it"}
+              </button>
+            )}
           </div>
         </div>
         {partyRoom ? (
@@ -185,6 +218,13 @@ export default function Watch() {
           </button>
         )}
       </div>
+
+      {partyNotice && (
+        <div role="status" className="mb-4 rounded-anteiku border border-sage/50 bg-forest/40 px-4 py-3 text-sm text-ivory">
+          {partyNotice}
+          <button type="button" onClick={() => setPartyNotice(null)} className="ml-3 text-sage hover:text-ivory">Dismiss</button>
+        </div>
+      )}
 
       <div className="mt-4 grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">

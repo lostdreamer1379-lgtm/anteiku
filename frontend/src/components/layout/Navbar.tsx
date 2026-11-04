@@ -55,7 +55,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle/60 bg-bg-primary/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
-        <Link to="/" className="flex items-center gap-2 font-serif text-lg tracking-wide text-ivory">
+        <Link to="/" className="flex shrink-0 items-center gap-1.5 font-serif text-base tracking-wide text-ivory md:gap-2 md:text-lg">
           <span className="h-2 w-2 rounded-full bg-sage" aria-hidden />
           ANTEIKU
         </Link>
@@ -116,7 +116,7 @@ export default function Navbar() {
               <div
                 id="navbar-search-results"
                 role="listbox"
-                className="absolute right-0 top-[calc(100%+0.55rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)]"
+                className="absolute left-1/2 right-auto top-[calc(100%+0.55rem)] z-50 w-[calc(100vw-1rem)] max-w-[22rem] -translate-x-1/2 overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)] sm:left-auto sm:right-0 sm:w-[min(22rem,calc(100vw-2rem))] sm:max-w-none sm:translate-x-0"
               >
                 {suggestions.isLoading ? (
                   <div className="space-y-2 p-3" aria-live="polite">

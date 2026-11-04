@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Palette } from "lucide-react";
+import { Check, Palette, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,8 @@ import FormField from "@/components/ui/FormField";
 import { apiFetch } from "@/services/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { themes, useTheme } from "@/contexts/ThemeContext";
+import UserAvatar from "@/components/common/UserAvatar";
+import { getLocalAvatar, setLocalAvatar } from "@/lib/profileStorage";
 
 const schema = z.object({
   username: z
@@ -35,6 +37,7 @@ export default function Profile() {
   const qc = useQueryClient();
   const [saved, setSaved] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [localAvatar, setLocalAvatarState] = useState<string | null>(() => getLocalAvatar(user?.id));
 
   const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: ["profile"],
@@ -91,6 +94,34 @@ export default function Profile() {
         <p>
           Signed in as <span className="text-ivory">{user?.email}</span>
         </p>
+      </div>
+
+      <div className="mt-5 flex items-center gap-4 rounded-anteiku border border-border-subtle bg-bg-card p-4">
+        <UserAvatar src={localAvatar ?? profile?.avatarUrl} label="Profile picture" className="h-16 w-16" />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ivory">Profile picture</p>
+          <p className="mt-1 text-xs text-muted">Choose an image from this device. If you skip it, the default ring avatar is used.</p>
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-anteiku border border-border-subtle px-3 py-1.5 text-xs text-sage hover:border-sage">
+            <Upload size={14} /> Choose image
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file || !user) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const value = typeof reader.result === "string" ? reader.result : null;
+                  if (!value) return;
+                  setLocalAvatar(user.id, value);
+                  setLocalAvatarState(value);
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+        </div>
       </div>
 
       <form

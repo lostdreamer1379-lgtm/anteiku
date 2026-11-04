@@ -6,6 +6,10 @@ import { useSearchAnime } from "@/hooks/useSearchAnime";
 import { useAnimeDetails } from "@/hooks/useAnimeDetails";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/services/api/client";
+import UserAvatar from "@/components/common/UserAvatar";
+import { getLocalAvatar } from "@/lib/profileStorage";
 import PosterCarousel from "@/components/anime/PosterCarousel";
 import PosterCard from "@/components/anime/PosterCard";
 import PosterCardSkeleton from "@/components/ui/PosterCardSkeleton";
@@ -90,7 +94,16 @@ function ContinueWatchingCard({ entry, onRemove }: { entry: WatchProgressEntry; 
   );
 }
 
-function ContinueWatching({ userId }: { userId?: string }) {
+function getGreeting(username?: string | null) {
+  const name = username ? `, ${username}` : "";
+  const hour = new Date().getHours();
+  if (hour < 12) return `Good morning${name} — coffee with anime?`;
+  if (hour < 17) return `Good afternoon${name} — lunch and anime?`;
+  if (hour < 22) return `Good evening${name} — wind down with anime?`;
+  return `Good night${name} — one more anime?`;
+}
+
+function ContinueWatching({ userId, username, avatarUrl }: { userId?: string; username?: string | null; avatarUrl?: string | null }) {
   const { query } = useProgress();
   const [dismissed, setDismissed] = useState<Record<number, string>>({});
   const storageKey = `anteiku:continue-watching-dismissed:${userId}`;
@@ -126,6 +139,13 @@ function ContinueWatching({ userId }: { userId?: string }) {
 
   return (
     <section className="px-5 py-8 md:px-8">
+      <div className="mb-7 flex items-center gap-3">
+        <UserAvatar src={avatarUrl ?? getLocalAvatar(userId)} label={username ? `${username}'s profile picture` : "Default profile picture"} className="h-14 w-14" />
+        <div>
+          <p className="font-serif text-2xl text-ivory">{getGreeting(username)}</p>
+          <p className="mt-1 text-sm text-muted">A little story for every mood.</p>
+        </div>
+      </div>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="font-serif text-xl text-ivory">Continue Watching</h2>
@@ -420,6 +440,11 @@ function CollectionResults({ collection, isOpen }: { collection: Collection; isO
 export default function Home() {
   const { trending, airing, seasonal } = useHomeCarousels();
   const { user } = useAuth();
+  const { data: profile } = useQuery<{ username: string | null; avatarUrl: string | null }>({
+    queryKey: ["profile"],
+    queryFn: () => apiFetch<{ data: { username: string | null; avatarUrl: string | null } }>("/profile").then((response) => response.data),
+    enabled: !!user,
+  });
   const [openCollection, setOpenCollection] = useState<string | null>(null);
   const heroItems = trending.data ?? [];
   const [heroIndex, setHeroIndex] = useState(0);
@@ -486,7 +511,7 @@ export default function Home() {
         </div>
       </section>
 
-      <ContinueWatching userId={user?.id} />
+      <ContinueWatching userId={user?.id} username={profile?.username ?? null} avatarUrl={profile?.avatarUrl ?? null} />
 
       <PosterCarousel title="Trending Now" items={trending.data ?? []} isLoading={trending.isLoading} />
       <PosterCarousel

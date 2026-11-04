@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Info, Users, Link as LinkIcon, Check } from "lucide-react";
 import Player from "@/components/player/Player";
@@ -23,7 +23,13 @@ export default function Watch() {
   const animeId = Number(id);
   const episodeNumber = Number(episode);
   const partyRoom = searchParams.get("party") || undefined;
-  const party = useWatchParty(animeId, episodeNumber, partyRoom);
+  const participant = useMemo(() => user ? ({
+    id: user.id,
+    name: String(user.user_metadata?.username ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Viewer"),
+    account: user.email ?? user.id,
+    isHost: false,
+  }) : undefined, [user]);
+  const party = useWatchParty(animeId, episodeNumber, partyRoom, participant);
 
   useEffect(() => party.onCommand(setRemotePartyCommand), [party]);
   useEffect(() => {
@@ -135,6 +141,15 @@ export default function Watch() {
             <p className="text-xs text-muted">
               {partyRoom ? (party.connected ? "Connected — playback is synced" : "Connecting to party…") : "Watch this episode together in real time"}
             </p>
+            {partyRoom && party.participants.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5" aria-label="People in this watch party">
+                {party.participants.map((person) => (
+                  <span key={person.id} title={person.account} className="rounded-full border border-border-subtle bg-bg-secondary px-2 py-0.5 text-[11px] text-muted">
+                    {person.name}{person.isHost ? " · host" : ""}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {partyRoom ? (

@@ -2,10 +2,10 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export const themes = [
   { id: "cappuccino", name: "Cappuccino", description: "Cozy espresso, caramel and cream", swatches: ["#18110f", "#d69c65", "#faedd8"] },
-  { id: "github", name: "GitHub AMOLED", description: "Vibrant green on true black", swatches: ["#000000", "#39ff75", "#eefff2"] },
-  { id: "godzilla", name: "Godzilla AMOLED", description: "Neon blue against deep black", swatches: ["#000308", "#00d6ff", "#e7faff"] },
-  { id: "starry", name: "Starry Night", description: "Vibrant purple and AMOLED black", swatches: ["#04020c", "#cc4fff", "#f7f0ff"] },
-  { id: "light", name: "Light", description: "Soft paper with forest accents", swatches: ["#f8f6f0", "#2f7e52", "#1b201c"] },
+  { id: "github", name: "GitHub AMOLED", description: "Vibrant green on true black", swatches: ["#000000", "#1de660", "#f1f7f2"] },
+  { id: "godzilla", name: "Godzilla AMOLED", description: "Neon blue against deep black", swatches: ["#000308", "#0026ff", "#e7faff"] },
+  { id: "starry", name: "Starry Night", description: "Vibrant purple and AMOLED black", swatches: ["#04020c", "#5d25f5", "#f7f0ff"] },
+  { id: "light", name: "Light", description: "Soft paper with forest accents", swatches: ["#f8f6f0", "#2f7e52", "#2d312e"] },
 ] as const;
 
 export type ThemeId = (typeof themes)[number]["id"];

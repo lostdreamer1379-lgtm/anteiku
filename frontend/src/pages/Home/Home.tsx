@@ -149,7 +149,7 @@ function ContinueWatching({ userId }: { userId?: string }) {
   );
 }
 
-type HeroPhase = "focus" | "zoom-out" | "wheel";
+type HeroPhase = "focus" | "zoom-out" | "momentum" | "wheel";
 
 function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
   items: AnimeSummary[];
@@ -271,14 +271,14 @@ function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
           triggerHaptic(targetIndex);
           setIsDragging(false);
           if (highMomentum) {
-            setPhase("zoom-out");
+            setPhase("momentum");
             setDragRotation(momentumRotation);
             const glideTimer = window.setTimeout(() => {
               onChange(targetIndex);
               onPreview?.(targetIndex);
               setDragRotation(0);
-            }, 620);
-            const focusTimer = window.setTimeout(() => setPhase("focus"), 820);
+            }, 1_650);
+            const focusTimer = window.setTimeout(() => setPhase("focus"), 2_000);
             timers.current.push(glideTimer, focusTimer);
           } else {
             setDragRotation(targetIndex === selectedIndex && Math.abs(distance) < 22 ? 0 : targetOffset);
@@ -323,7 +323,7 @@ function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
     >
       <div className={`absolute inset-0 transition-transform duration-500 [perspective:1000px] ${phaseScale} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
         <div
-          className={`absolute inset-0 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] ${isDragging ? "transition-none" : phase === "zoom-out" ? "transition-transform duration-700" : "transition-transform duration-500"}`}
+          className={`absolute inset-0 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] ${isDragging ? "transition-none" : phase === "momentum" ? "transition-transform duration-[2000ms]" : phase === "zoom-out" ? "transition-transform duration-700" : "transition-transform duration-500"}`}
           style={{ transform: `rotateY(${rotation}deg)` }}
         >
           {items.map((anime, index) => {

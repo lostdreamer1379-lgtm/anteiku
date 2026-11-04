@@ -116,7 +116,7 @@ export default function Navbar() {
               <div
                 id="navbar-search-results"
                 role="listbox"
-                className="absolute left-1/2 right-auto top-[calc(100%+0.55rem)] z-50 w-[calc(100vw-1rem)] max-w-[22rem] -translate-x-1/2 overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)] sm:left-auto sm:right-0 sm:w-[min(22rem,calc(100vw-2rem))] sm:max-w-none sm:translate-x-0"
+                className="fixed inset-x-2 top-[4.5rem] z-50 w-auto max-w-none overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.55rem)] sm:w-[min(22rem,calc(100vw-2rem))]"
               >
                 {suggestions.isLoading ? (
                   <div className="space-y-2 p-3" aria-live="polite">

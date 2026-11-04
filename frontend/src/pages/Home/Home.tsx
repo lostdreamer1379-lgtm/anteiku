@@ -151,50 +151,82 @@ function ContinueWatching({ userId }: { userId?: string }) {
 
 type HeroPhase = "focus" | "zoom-out" | "wheel";
 
-function HeroWheel({ items, selectedIndex, onChange }: {
+function HeroWheel({ items, selectedIndex, onChange, onPreview }: {
   items: AnimeSummary[];
   selectedIndex: number;
-  onChange: (direction: 1 | -1) => void;
+  onChange: (index: number) => void;
+  onPreview?: (index: number) => void;
 }) {
   const [phase, setPhase] = useState<HeroPhase>("focus");
   const [isDragging, setIsDragging] = useState(false);
   const [dragRotation, setDragRotation] = useState(0);
   const dragStart = useRef<number | null>(null);
+  const lastPointerX = useRef(0);
+  const lastPointerAt = useRef(0);
+  const dragVelocity = useRef(0);
   const draggingRef = useRef(false);
   const wheelDistance = useRef(0);
   const wheelResetTimer = useRef<number | null>(null);
   const timers = useRef<number[]>([]);
+  const inactivityTimer = useRef<number | null>(null);
+  const pausedUntil = useRef(0);
+  const lastAutoRotation = useRef(Date.now());
+  const lastHapticIndex = useRef(selectedIndex);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
 
-  const rotate = useCallback((direction: 1 | -1) => {
+  const step = 360 / Math.max(items.length, 1);
+
+  const markActivity = useCallback(() => {
+    pausedUntil.current = Date.now() + 10_000;
+    lastAutoRotation.current = Date.now();
+    if (inactivityTimer.current !== null) window.clearTimeout(inactivityTimer.current);
+    inactivityTimer.current = window.setTimeout(() => {
+      inactivityTimer.current = null;
+    }, 10_000);
+  }, []);
+
+  const triggerHaptic = useCallback((index: number) => {
+    if (index === lastHapticIndex.current) return;
+    lastHapticIndex.current = index;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(8);
+  }, []);
+
+  const rotateTo = useCallback((targetIndex: number, userInitiated = true) => {
     if (items.length < 2 || phaseRef.current !== "focus" || draggingRef.current) return;
+    if (userInitiated) markActivity();
 
     setPhase("zoom-out");
     const wheelTimer = window.setTimeout(() => {
       setDragRotation(0);
-      onChange(direction);
+      onChange((targetIndex + items.length) % items.length);
+      onPreview?.((targetIndex + items.length) % items.length);
       setPhase("wheel");
     }, 260);
     const focusTimer = window.setTimeout(() => setPhase("focus"), 820);
     timers.current.push(wheelTimer, focusTimer);
-  }, [items.length, onChange]);
+  }, [items.length, markActivity, onChange, onPreview]);
 
   useEffect(() => {
     if (items.length < 2) return;
-    const interval = window.setInterval(() => rotate(1), 4_800);
+    const interval = window.setInterval(() => {
+      const now = Date.now();
+      if (now < pausedUntil.current || now - lastAutoRotation.current < 4_800 || draggingRef.current || phaseRef.current !== "focus") return;
+      lastAutoRotation.current = now;
+      rotateTo(selectedIndex + 1, false);
+    }, 250);
     return () => window.clearInterval(interval);
-  }, [items.length, rotate]);
+  }, [items.length, rotateTo, selectedIndex]);
 
   useEffect(() => () => {
     timers.current.forEach((timer) => window.clearTimeout(timer));
+    if (inactivityTimer.current !== null) window.clearTimeout(inactivityTimer.current);
   }, []);
 
   if (!items.length) {
     return <div className="mx-auto h-[17rem] w-[17rem] animate-pulse rounded-full bg-bg-card/60 sm:h-[22rem] sm:w-[22rem]" />;
   }
 
-  const step = 360 / items.length;
   const rotation = -(selectedIndex * step) + dragRotation;
   const phaseScale = phase === "focus" ? "scale-[1.08]" : "scale-[0.78]";
 
@@ -202,8 +234,14 @@ function HeroWheel({ items, selectedIndex, onChange }: {
     <div
       className="relative mx-auto h-[22rem] w-full max-w-[48rem] touch-pan-y select-none sm:h-[34rem]"
       onPointerDown={(event) => {
+        if (phaseRef.current !== "focus") return;
+        markActivity();
         event.currentTarget.setPointerCapture(event.pointerId);
         dragStart.current = event.clientX;
+        lastPointerX.current = event.clientX;
+        lastPointerAt.current = performance.now();
+        dragVelocity.current = 0;
+        lastHapticIndex.current = selectedIndex;
         draggingRef.current = true;
         setDragRotation(0);
         setIsDragging(true);
@@ -211,31 +249,50 @@ function HeroWheel({ items, selectedIndex, onChange }: {
       onPointerMove={(event) => {
         if (dragStart.current === null || phaseRef.current !== "focus") return;
         const distance = event.clientX - dragStart.current;
-        setDragRotation(distance * 0.42);
+        const now = performance.now();
+        const elapsed = Math.max(1, now - lastPointerAt.current);
+        dragVelocity.current = ((event.clientX - lastPointerX.current) / elapsed) * 0.42;
+        lastPointerX.current = event.clientX;
+        lastPointerAt.current = now;
+        const nextRotation = distance * 0.42;
+        setDragRotation(nextRotation);
+        const previewIndex = (selectedIndex - Math.round(nextRotation / step) + items.length) % items.length;
+        triggerHaptic(previewIndex);
+        onPreview?.(previewIndex);
       }}
       onPointerUp={(event) => {
         if (dragStart.current !== null) {
           const distance = event.clientX - dragStart.current;
-          if (Math.abs(distance) > 22) rotate(distance < 0 ? 1 : -1);
-          else setDragRotation(0);
+          const projectedRotation = distance * 0.42 + dragVelocity.current * 140;
+          const targetIndex = (selectedIndex - Math.round(projectedRotation / step) + items.length) % items.length;
+          const targetOffset = -(targetIndex - selectedIndex) * step;
+          triggerHaptic(targetIndex);
+          setDragRotation(targetIndex === selectedIndex && Math.abs(distance) < 22 ? 0 : targetOffset);
+          setIsDragging(false);
+          window.setTimeout(() => {
+            onChange(targetIndex);
+            onPreview?.(targetIndex);
+            setDragRotation(0);
+          }, 520);
         }
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
         dragStart.current = null;
         draggingRef.current = false;
-        setIsDragging(false);
       }}
       onPointerCancel={() => {
         dragStart.current = null;
         draggingRef.current = false;
         setDragRotation(0);
         setIsDragging(false);
+        onPreview?.(selectedIndex);
       }}
       onWheel={(event) => {
         // Trackpad swipes arrive as horizontal wheel events on laptops.
         if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 1) return;
         event.preventDefault();
+        markActivity();
         wheelDistance.current += event.deltaX;
         if (wheelResetTimer.current !== null) window.clearTimeout(wheelResetTimer.current);
         wheelResetTimer.current = window.setTimeout(() => {
@@ -244,7 +301,8 @@ function HeroWheel({ items, selectedIndex, onChange }: {
         if (Math.abs(wheelDistance.current) >= 72) {
           const direction = wheelDistance.current > 0 ? 1 : -1;
           wheelDistance.current = 0;
-          rotate(direction);
+          triggerHaptic((selectedIndex + direction + items.length) % items.length);
+          rotateTo(selectedIndex + direction);
         }
       }}
     >
@@ -281,7 +339,7 @@ function HeroWheel({ items, selectedIndex, onChange }: {
       <button
         type="button"
         aria-label="Previous featured anime"
-        onClick={() => rotate(-1)}
+        onClick={() => rotateTo(selectedIndex - 1)}
         className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border-subtle bg-bg-primary/80 p-2 text-ivory backdrop-blur transition-colors hover:border-sage hover:text-sage sm:left-2"
       >
         <ChevronLeft size={18} />
@@ -289,7 +347,7 @@ function HeroWheel({ items, selectedIndex, onChange }: {
       <button
         type="button"
         aria-label="Next featured anime"
-        onClick={() => rotate(1)}
+        onClick={() => rotateTo(selectedIndex + 1)}
         className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border-subtle bg-bg-primary/80 p-2 text-ivory backdrop-blur transition-colors hover:border-sage hover:text-sage sm:right-2"
       >
         <ChevronRight size={18} />
@@ -350,13 +408,17 @@ export default function Home() {
   const [openCollection, setOpenCollection] = useState<string | null>(null);
   const heroItems = trending.data ?? [];
   const [heroIndex, setHeroIndex] = useState(0);
-  const hero = heroItems[heroIndex] ?? heroItems[0];
-  const changeHero = useCallback((direction: 1 | -1) => {
-    setHeroIndex((current) => (current + direction + heroItems.length) % heroItems.length);
+  const [previewHeroIndex, setPreviewHeroIndex] = useState(0);
+  const hero = heroItems[previewHeroIndex] ?? heroItems[heroIndex] ?? heroItems[0];
+  const changeHero = useCallback((index: number) => {
+    const nextIndex = (index + heroItems.length) % heroItems.length;
+    setHeroIndex(nextIndex);
+    setPreviewHeroIndex(nextIndex);
   }, [heroItems.length]);
 
   useEffect(() => {
     setHeroIndex(0);
+    setPreviewHeroIndex(0);
   }, [heroItems.length]);
 
   return (
@@ -399,7 +461,12 @@ export default function Home() {
           </div>
 
           <div className="relative z-10">
-            <HeroWheel items={heroItems} selectedIndex={heroIndex} onChange={changeHero} />
+            <HeroWheel
+              items={heroItems}
+              selectedIndex={heroIndex}
+              onChange={changeHero}
+              onPreview={setPreviewHeroIndex}
+            />
           </div>
         </div>
       </section>

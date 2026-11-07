@@ -16,7 +16,13 @@ export function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.frontendOrigin,
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin || env.frontendOrigins.includes(requestOrigin.replace(/\/+$/, ""))) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
       credentials: true,
     })
   );

@@ -1,11 +1,12 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { Search, User, LogOut, Menu, X } from "lucide-react";
-import { useEffect, useState, useRef, type FormEvent } from "react";
+import { Search, User, LogOut, Menu, X, Clock3 } from "lucide-react";
+import { useEffect, useState, useRef, type FormEvent, type MouseEvent } from "react";
 import clsx from "clsx";
 import { LayoutGroup, motion } from "motion/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSearchAnime } from "@/hooks/useSearchAnime";
+import { addSearchToHistory, getSearchHistory, removeSearchFromHistory } from "@/lib/searchHistory";
 
 const links = [
   { to: "/", label: "Home" },
@@ -21,6 +22,7 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => getSearchHistory());
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
@@ -47,9 +49,24 @@ export default function Navbar() {
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const query = searchQuery.trim();
+    if (query) setSearchHistory(addSearchToHistory(query));
     navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
     setSearchOpen(false);
     setOpen(false);
+  }
+
+  function handleRecentSearch(query: string) {
+    setSearchQuery(query);
+    setSearchHistory(addSearchToHistory(query));
+    navigate(`/explore?q=${encodeURIComponent(query)}`);
+    setSearchOpen(false);
+    setOpen(false);
+  }
+
+  function handleRemoveRecentSearch(event: MouseEvent<HTMLButtonElement>, query: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    setSearchHistory(removeSearchFromHistory(query));
   }
 
   return (
@@ -107,18 +124,52 @@ export default function Navbar() {
               onFocus={() => setSearchOpen(true)}
               placeholder="Search anime…"
               aria-label="Search anime"
-              aria-expanded={searchOpen && Boolean(searchQuery.trim())}
+              aria-expanded={searchOpen}
               aria-controls="navbar-search-results"
               className="h-9 w-full rounded-anteiku border border-border-subtle bg-bg-card/80 py-2 pl-9 pr-3 text-xs text-ivory placeholder:text-muted focus:border-sage focus:outline-none"
             />
 
-            {searchOpen && searchQuery.trim() && (
+            {searchOpen && (
               <div
                 id="navbar-search-results"
                 role="listbox"
                 className="fixed inset-x-2 top-[4.5rem] z-50 w-auto max-w-none overflow-hidden rounded-anteiku border border-border-subtle bg-bg-card shadow-[var(--shadow-soft)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.55rem)] sm:w-[min(22rem,calc(100vw-2rem))]"
               >
-                {suggestions.isLoading ? (
+                {!searchQuery.trim() ? (
+                  searchHistory.length ? (
+                    <>
+                      <div className="border-b border-border-subtle/70 px-3 py-2 text-[0.65rem] uppercase tracking-[0.18em] text-sage">
+                        Recent searches
+                      </div>
+                      <div className="p-1.5" role="listbox" aria-label="Recent searches">
+                        {searchHistory.map((query) => (
+                          <div key={query} className="group flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-bg-secondary">
+                            <button
+                              type="button"
+                              role="option"
+                              aria-label={`Search for ${query}`}
+                              onClick={() => handleRecentSearch(query)}
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm text-ivory"
+                            >
+                              <Clock3 size={14} className="shrink-0 text-muted" aria-hidden="true" />
+                              <span className="truncate">{query}</span>
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Remove ${query} from recent searches`}
+                              onClick={(event) => handleRemoveRecentSearch(event, query)}
+                              className="rounded p-1 text-muted transition-colors hover:bg-bg-card hover:text-ivory"
+                            >
+                              <X size={14} aria-hidden="true" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="p-4 text-sm text-muted">Search for an anime to get started.</p>
+                  )
+                ) : suggestions.isLoading ? (
                   <div className="space-y-2 p-3" aria-live="polite">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div key={index} className="h-12 animate-pulse rounded-md bg-bg-secondary" />
@@ -137,7 +188,10 @@ export default function Navbar() {
                             key={anime.id}
                             to={`/anime/${anime.id}`}
                             role="option"
-                            onClick={() => setSearchOpen(false)}
+                            onClick={() => {
+                              setSearchHistory(addSearchToHistory(searchQuery));
+                              setSearchOpen(false);
+                            }}
                             className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-bg-secondary"
                           >
                             <img src={anime.coverImage} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />

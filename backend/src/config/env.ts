@@ -12,7 +12,10 @@ function required(key: string): string {
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   nodeEnv: process.env.NODE_ENV ?? "development",
-  frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
+  frontendOrigins: (process.env.FRONTEND_ORIGIN ?? "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
   databaseUrl: required("DATABASE_URL"),
   supabaseUrl: required("SUPABASE_URL"),
   supabaseJwtSecret: required("SUPABASE_JWT_SECRET"),

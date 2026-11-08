@@ -17,7 +17,7 @@ const configuredFrontendOrigins = (process.env.FRONTEND_ORIGIN ?? "http://localh
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   nodeEnv: process.env.NODE_ENV ?? "development",
-  frontendOrigins: [...new Set([...configuredFrontendOrigins, "https://frontend-antieku.vercel.app"])],
+  frontendOrigins: [...new Set([...configuredFrontendOrigins, "https://frontend-anteiku.vercel.app"])],
   databaseUrl: required("DATABASE_URL"),
   supabaseUrl: required("SUPABASE_URL"),
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_JWT_SECRET ?? "",

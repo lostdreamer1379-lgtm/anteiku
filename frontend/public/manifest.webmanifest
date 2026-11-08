@@ -6,6 +6,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "handle_links": "preferred",
   "capture_links": "existing-client-navigate",
   "launch_handler": {
     "client_mode": ["navigate-existing", "auto"]

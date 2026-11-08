@@ -23,6 +23,71 @@ body {
   outline-offset: 2px;
 }
 
+/* A small portal in the header for the Frontend Worlds experience. */
+.worlds-portal {
+  isolation: isolate;
+  background: linear-gradient(120deg, rgb(76 29 149 / 0.92), rgb(126 34 206 / 0.78), rgb(76 29 149 / 0.92));
+  box-shadow: 0 0 18px rgb(139 92 246 / 0.35), inset 0 0 12px rgb(216 180 254 / 0.12);
+}
+
+.worlds-portal::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgb(255 255 255 / 0.34) 48%, transparent 70%);
+  content: "";
+  transform: translateX(-140%);
+  transition: transform 650ms ease;
+}
+
+.worlds-portal:hover::after,
+.worlds-portal:focus-visible::after {
+  transform: translateX(140%);
+}
+
+.worlds-portal__wash {
+  position: absolute;
+  inset: -100%;
+  z-index: -1;
+  background: conic-gradient(from 90deg, transparent, rgb(196 181 253 / 0.22), transparent 32%);
+  animation: worlds-portal-spin 7s linear infinite;
+}
+
+.worlds-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgb(88 28 135 / 0.34), rgb(9 5 22 / 0.98) 42%);
+  animation: worlds-fade-in 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.worlds-transition__orb {
+  position: absolute;
+  width: min(72vw, 42rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(216 180 254 / 0.4) 0, rgb(139 92 246 / 0.16) 29%, transparent 68%);
+  filter: blur(10px);
+  animation: worlds-orb-breathe 2.5s ease-in-out infinite;
+}
+
+.worlds-transition__rings {
+  position: absolute;
+  width: min(120vw, 64rem);
+  aspect-ratio: 1;
+  border: 1px solid rgb(196 181 253 / 0.2);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5rem rgb(139 92 246 / 0.04), 0 0 0 12rem rgb(139 92 246 / 0.035), 0 0 80px rgb(167 139 250 / 0.3);
+  animation: worlds-ring-expand 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes worlds-portal-spin { to { transform: rotate(360deg); } }
+@keyframes worlds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes worlds-orb-breathe { 50% { transform: scale(1.12); opacity: 0.72; } }
+@keyframes worlds-ring-expand { from { transform: scale(0.35); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
 /* Quiet, fine-line scrollbars used throughout the app. The two small dots
    mark the scrollable range without competing with the content. */
 * {

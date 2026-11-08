@@ -1,5 +1,5 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { Search, User, LogOut, Menu, X, Clock3 } from "lucide-react";
+import { Search, User, LogOut, Menu, X, Clock3, ArrowUpRight, Sparkles } from "lucide-react";
 import { useEffect, useState, useRef, type FormEvent, type MouseEvent } from "react";
 import clsx from "clsx";
 import { LayoutGroup, motion } from "motion/react";
@@ -15,6 +15,8 @@ const links = [
   { to: "/watchlist", label: "Watchlist" },
 ];
 
+const WORLDS_URL = "https://frontend-worlds.vercel.app/";
+
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>(() => getSearchHistory());
+  const [enteringWorlds, setEnteringWorlds] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
@@ -69,6 +72,15 @@ export default function Navbar() {
     setSearchHistory(removeSearchFromHistory(query));
   }
 
+  function enterWorlds(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    if (enteringWorlds) return;
+
+    setEnteringWorlds(true);
+    setOpen(false);
+    window.setTimeout(() => window.location.assign(WORLDS_URL), 760);
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle/60 bg-bg-primary/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
@@ -108,6 +120,18 @@ export default function Navbar() {
         </LayoutGroup>
 
         <div className="flex items-center gap-3">
+          <a
+            href={WORLDS_URL}
+            onClick={enterWorlds}
+            aria-label="Enter Frontend Worlds"
+            className="worlds-portal group relative hidden h-9 items-center gap-2 overflow-hidden rounded-full border border-violet-300/50 px-3.5 text-xs font-semibold tracking-[0.14em] text-violet-50 transition duration-300 hover:scale-[1.03] hover:border-violet-200 md:inline-flex"
+          >
+            <span className="worlds-portal__wash" aria-hidden />
+            <Sparkles size={13} className="relative text-violet-200 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" aria-hidden />
+            <span className="relative">WORLDS</span>
+            <ArrowUpRight size={13} className="relative text-violet-200 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+          </a>
+
           <form ref={searchRef} onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">
             <Search
               size={16}
@@ -275,6 +299,14 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-border-subtle/60 px-5 pb-4 pt-2 md:hidden">
           <div className="flex flex-col gap-1">
+            <a
+              href={WORLDS_URL}
+              onClick={enterWorlds}
+              className="worlds-portal mb-2 flex items-center justify-between rounded-anteiku border border-violet-300/50 px-3 py-3 text-sm font-semibold tracking-[0.14em] text-violet-50"
+            >
+              <span className="flex items-center gap-2"><Sparkles size={15} className="text-violet-200" aria-hidden /> Enter Worlds</span>
+              <ArrowUpRight size={15} className="text-violet-200" aria-hidden />
+            </a>
             {links.map((link) => (
               <NavLink
                 key={link.to}
@@ -316,6 +348,19 @@ export default function Navbar() {
                 Sign in
               </Link>
             )}
+          </div>
+        </div>
+      )}
+
+      {enteringWorlds && (
+        <div className="worlds-transition" role="status" aria-live="polite" aria-label="Entering Frontend Worlds">
+          <div className="worlds-transition__orb" aria-hidden />
+          <div className="worlds-transition__rings" aria-hidden />
+          <div className="relative flex flex-col items-center gap-3 text-center">
+            <Sparkles size={22} className="animate-pulse text-violet-200" aria-hidden />
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.42em] text-violet-200">Entering</p>
+            <p className="font-serif text-3xl tracking-wide text-white">Frontend Worlds</p>
+            <p className="text-sm text-violet-100/60">A new perspective is unfolding…</p>
           </div>
         </div>
       )}

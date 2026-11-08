@@ -23,7 +23,14 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     }
     const token = header.slice("Bearer ".length);
 
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    let result;
+    try {
+      result = await supabaseAdmin.auth.getUser(token);
+    } catch {
+      throw new ApiError(502, "Authentication provider is unavailable");
+    }
+
+    const { data, error } = result;
     if (error || !data.user) {
       throw new ApiError(401, "Invalid or expired session");
     }

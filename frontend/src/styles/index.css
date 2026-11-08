@@ -13,6 +13,133 @@ body {
   transition: background-color 300ms ease, color 300ms ease;
 }
 
+.app-shell {
+  animation: app-shell-arrive 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-opening {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  min-height: 100dvh;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: rgb(var(--color-bg-primary));
+  animation: app-opening-leave 1800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+.app-opening::before,
+.app-opening::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.app-opening::before {
+  z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 20%, rgb(3 2 8 / 0.2) 58%, rgb(3 2 8 / 0.84) 100%);
+}
+
+.app-opening::after {
+  z-index: 2;
+  border: 1px solid rgb(var(--color-sage) / 0.15);
+  box-shadow: inset 0 0 0 1.5rem rgb(3 2 8 / 0.12), inset 0 0 8rem rgb(3 2 8 / 0.45);
+  animation: app-opening-frame 1800ms ease-out both;
+}
+
+.app-opening__grid {
+  position: absolute;
+  inset: -50%;
+  opacity: 0;
+  background-image: linear-gradient(rgb(var(--color-sage) / 0.07) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--color-sage) / 0.07) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  transform: perspective(28rem) rotateX(62deg) translateY(28%);
+  animation: app-opening-grid 1800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-opening__beam {
+  position: absolute;
+  z-index: 1;
+  width: 45vw;
+  height: 180%;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgb(var(--color-sage) / 0.1), transparent);
+  filter: blur(1rem);
+  transform: rotate(32deg);
+}
+
+.app-opening__beam--one { animation: app-opening-beam-one 1800ms ease-in-out both; }
+.app-opening__beam--two { animation: app-opening-beam-two 1800ms ease-in-out both; }
+
+.app-opening__orbit {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid rgb(var(--color-sage) / 0.3);
+  border-radius: 50%;
+  box-shadow: 0 0 2rem rgb(var(--color-sage) / 0.08);
+  transform: rotate(-25deg) scale(0.65);
+  opacity: 0;
+}
+
+.app-opening__orbit::after {
+  position: absolute;
+  top: -0.3rem;
+  left: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: rgb(var(--color-sage));
+  box-shadow: 0 0 1.2rem rgb(var(--color-sage) / 0.9);
+  content: "";
+}
+
+.app-opening__orbit--outer { width: min(78vw, 42rem); aspect-ratio: 2.6; animation: app-opening-orbit 1800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.app-opening__orbit--inner { width: min(58vw, 28rem); aspect-ratio: 2.6; animation: app-opening-orbit 1800ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both reverse; }
+
+.app-opening__halo {
+  z-index: 1;
+  position: absolute;
+  width: min(70vw, 34rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--color-sage) / 0.15), transparent 68%);
+  animation: app-opening-halo 1800ms ease-out both;
+}
+
+.app-opening__scene { z-index: 3; animation: app-opening-scene 1800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.app-opening__mark {
+  position: relative;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgb(var(--color-sage) / 0.65);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgb(var(--color-sage) / 0.35);
+  animation: app-opening-mark 1250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-opening__mark::before,
+.app-opening__mark::after,
+.app-opening__mark span {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 50%;
+  background: rgb(var(--color-sage));
+  box-shadow: 0 0 10px rgb(var(--color-sage) / 0.9);
+  content: "";
+}
+
+.app-opening__mark::before { transform: translate(-50%, -50%) rotate(0deg) translateY(-0.7rem); }
+.app-opening__mark::after { transform: translate(-50%, -50%) rotate(120deg) translateY(-0.7rem); }
+.app-opening__mark span { transform: translate(-50%, -50%) rotate(240deg) translateY(-0.7rem); }
+
 ::selection {
   background-color: rgb(var(--color-forest));
   color: rgb(var(--color-ivory));
@@ -60,7 +187,7 @@ body {
   place-items: center;
   overflow: hidden;
   background: radial-gradient(circle at center, rgb(88 28 135 / 0.34), rgb(9 5 22 / 0.98) 42%);
-  animation: worlds-fade-in 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: worlds-fade-in 1850ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .worlds-transition__orb {
@@ -80,13 +207,51 @@ body {
   border: 1px solid rgb(196 181 253 / 0.2);
   border-radius: 50%;
   box-shadow: 0 0 0 5rem rgb(139 92 246 / 0.04), 0 0 0 12rem rgb(139 92 246 / 0.035), 0 0 80px rgb(167 139 250 / 0.3);
-  animation: worlds-ring-expand 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: worlds-ring-expand 1650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worlds-transition__stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image: radial-gradient(circle at 18% 24%, rgb(221 214 254 / 0.7) 0 1px, transparent 1.5px), radial-gradient(circle at 78% 32%, rgb(221 214 254 / 0.55) 0 1px, transparent 1.5px), radial-gradient(circle at 66% 78%, rgb(221 214 254 / 0.5) 0 1px, transparent 1.5px), radial-gradient(circle at 28% 72%, rgb(221 214 254 / 0.45) 0 1px, transparent 1.5px);
+  animation: worlds-stars-drift 1850ms ease-out both;
+}
+
+.worlds-transition__progress {
+  width: 8rem;
+  height: 1px;
+  margin-top: 0.8rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(196 181 253 / 0.14);
+}
+
+.worlds-transition__progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, rgb(167 139 250), rgb(233 213 255));
+  animation: worlds-progress 1750ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes worlds-portal-spin { to { transform: rotate(360deg); } }
-@keyframes worlds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes app-shell-arrive { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: scale(1); } }
+@keyframes app-opening-leave { 0%, 68% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes app-opening-frame { 0%, 68% { opacity: 0; } 78% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes app-opening-grid { 0%, 25% { opacity: 0; transform: perspective(28rem) rotateX(62deg) translateY(40%) scale(1.1); } 62% { opacity: 1; } 100% { opacity: 0.25; transform: perspective(28rem) rotateX(62deg) translateY(12%) scale(1); } }
+@keyframes app-opening-beam-one { 0%, 22% { opacity: 0; transform: translateX(-70vw) rotate(32deg); } 47% { opacity: 0.8; } 74%, 100% { opacity: 0; transform: translateX(70vw) rotate(32deg); } }
+@keyframes app-opening-beam-two { 0%, 38% { opacity: 0; transform: translateX(70vw) rotate(32deg); } 62% { opacity: 0.55; } 86%, 100% { opacity: 0; transform: translateX(-70vw) rotate(32deg); } }
+@keyframes app-opening-orbit { 0% { opacity: 0; transform: rotate(-25deg) scale(0.65); } 28% { opacity: 0.9; } 74% { opacity: 0.65; transform: rotate(18deg) scale(1); } 100% { opacity: 0; transform: rotate(32deg) scale(1.14); } }
+@keyframes app-opening-scene { 0%, 18% { opacity: 0; transform: translateY(1rem) scale(0.92); } 44% { opacity: 1; } 72% { transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-0.75rem) scale(1.04); } }
+@keyframes app-opening-halo { from { transform: scale(0.65); opacity: 0; } 38% { opacity: 1; } 72% { transform: scale(1); opacity: 0.8; } to { transform: scale(1.3); opacity: 0; } }
+@keyframes app-opening-mark { from { transform: scale(0.5) rotate(-35deg); opacity: 0; } 55% { transform: scale(1) rotate(0); opacity: 1; } to { transform: scale(1.03); } }
+@keyframes worlds-fade-in { 0% { opacity: 0; } 18%, 82% { opacity: 1; } 100% { opacity: 0.98; } }
 @keyframes worlds-orb-breathe { 50% { transform: scale(1.12); opacity: 0.72; } }
-@keyframes worlds-ring-expand { from { transform: scale(0.35); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes worlds-ring-expand { 0% { transform: scale(0.35); opacity: 0; } 45% { opacity: 1; } 100% { transform: scale(1.06); opacity: 0.7; } }
+@keyframes worlds-stars-drift { 0%, 30% { opacity: 0; transform: scale(0.8); } 62% { opacity: 0.8; } 100% { opacity: 0.35; transform: scale(1.08); } }
+@keyframes worlds-progress { from { transform: scaleX(0); } 84% { transform: scaleX(0.88); } to { transform: scaleX(1); } }
 
 /* Quiet, fine-line scrollbars used throughout the app. The two small dots
    mark the scrollable range without competing with the content. */

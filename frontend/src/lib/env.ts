@@ -10,10 +10,15 @@ function readEnv(key: string, required = true): string {
   return value ?? "";
 }
 
+function normaliseApiBaseUrl(value: string): string {
+  const baseUrl = (value || "http://localhost:4000/api").replace(/\/+$/, "");
+  return /\/api$/i.test(baseUrl) ? baseUrl : `${baseUrl}/api`;
+}
+
 export const env = {
   supabaseUrl: readEnv("VITE_SUPABASE_URL"),
   supabasePublishableKey: readEnv("VITE_SUPABASE_PUBLISHABLE_KEY"),
-  apiBaseUrl: (readEnv("VITE_API_BASE_URL", false) || "http://localhost:4000/api").replace(/\/+$/, ""),
+  apiBaseUrl: normaliseApiBaseUrl(readEnv("VITE_API_BASE_URL", false)),
   playbackProvider: readEnv("VITE_PLAYBACK_PROVIDER", false).toLowerCase() === "vidrift"
     ? "vidrift" as const
     : "demo" as const,

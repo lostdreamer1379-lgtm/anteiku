@@ -1,5 +1,5 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { Search, User, LogOut, Menu, X, Clock3, ArrowUpRight, Sparkles } from "lucide-react";
+import { Search, User, LogOut, Menu, X, Clock3, ArrowUpRight, Sparkles, Globe2 } from "lucide-react";
 import { useEffect, useState, useRef, type FormEvent, type MouseEvent } from "react";
 import clsx from "clsx";
 import { LayoutGroup, motion } from "motion/react";
@@ -78,7 +78,7 @@ export default function Navbar() {
 
     setEnteringWorlds(true);
     setOpen(false);
-    window.setTimeout(() => window.location.assign(WORLDS_URL), 760);
+    window.setTimeout(() => window.location.assign(WORLDS_URL), 1850);
   }
 
   return (
@@ -130,6 +130,16 @@ export default function Navbar() {
             <Sparkles size={13} className="relative text-violet-200 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" aria-hidden />
             <span className="relative">WORLDS</span>
             <ArrowUpRight size={13} className="relative text-violet-200 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+          </a>
+
+          <a
+            href={WORLDS_URL}
+            onClick={enterWorlds}
+            aria-label="Enter Frontend Worlds"
+            className="worlds-portal group relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-violet-300/50 text-violet-50 transition duration-300 hover:scale-[1.06] hover:border-violet-200 md:hidden"
+          >
+            <span className="worlds-portal__wash" aria-hidden />
+            <Globe2 size={16} className="relative transition-transform duration-500 group-hover:rotate-12" aria-hidden />
           </a>
 
           <form ref={searchRef} onSubmit={handleSearch} className="relative w-32 sm:w-44 lg:w-56">
@@ -356,11 +366,13 @@ export default function Navbar() {
         <div className="worlds-transition" role="status" aria-live="polite" aria-label="Entering Frontend Worlds">
           <div className="worlds-transition__orb" aria-hidden />
           <div className="worlds-transition__rings" aria-hidden />
+          <div className="worlds-transition__stars" aria-hidden />
           <div className="relative flex flex-col items-center gap-3 text-center">
             <Sparkles size={22} className="animate-pulse text-violet-200" aria-hidden />
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.42em] text-violet-200">Entering</p>
             <p className="font-serif text-3xl tracking-wide text-white">Frontend Worlds</p>
-            <p className="text-sm text-violet-100/60">A new perspective is unfolding…</p>
+            <p className="text-sm text-violet-100/60">A new perspective is unfolding slowly…</p>
+            <div className="worlds-transition__progress" aria-hidden><span /></div>
           </div>
         </div>
       )}

@@ -9,13 +9,15 @@ function required(key: string): string {
   return value ?? "";
 }
 
+const configuredFrontendOrigins = (process.env.FRONTEND_ORIGIN ?? "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   nodeEnv: process.env.NODE_ENV ?? "development",
-  frontendOrigins: (process.env.FRONTEND_ORIGIN ?? "http://localhost:5173")
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/+$/, ""))
-    .filter(Boolean),
+  frontendOrigins: [...new Set([...configuredFrontendOrigins, "https://frontend-antieku.vercel.app"])],
   databaseUrl: required("DATABASE_URL"),
   supabaseUrl: required("SUPABASE_URL"),
   supabaseJwtSecret: required("SUPABASE_JWT_SECRET"),

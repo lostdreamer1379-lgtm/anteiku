@@ -10,10 +10,12 @@ const OPENING_DURATION_MS = 3000;
 export default function AppLayout() {
   const location = useLocation();
   const [isOpening, setIsOpening] = useState(true);
+  const [openingKey, setOpeningKey] = useState(0);
   const openingTimer = useRef<number | null>(null);
 
   useEffect(() => {
     function playOpening() {
+      setOpeningKey((key) => key + 1);
       setIsOpening(true);
       if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
       openingTimer.current = window.setTimeout(() => {
@@ -39,19 +41,21 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="app-shell flex min-h-screen flex-col bg-bg-primary">
-      <Navbar />
-      <main className="flex-1">
-        <div key={location.pathname} className="route-entry">
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-        </div>
-      </main>
-      <Footer />
+    <>
+      <div className="app-shell flex min-h-screen flex-col bg-bg-primary">
+        <Navbar />
+        <main className="flex-1">
+          <div key={location.pathname} className="route-entry">
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
+          </div>
+        </main>
+        <Footer />
+      </div>
 
       {isOpening && (
-        <div className="app-opening" role="status" aria-label="Opening Anteiku">
+        <div key={openingKey} className="app-opening" role="status" aria-label="Opening Anteiku">
           <div className="app-opening__grid" aria-hidden />
           <div className="app-opening__beam app-opening__beam--one" aria-hidden />
           <div className="app-opening__beam app-opening__beam--two" aria-hidden />
@@ -66,6 +70,6 @@ export default function AppLayout() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

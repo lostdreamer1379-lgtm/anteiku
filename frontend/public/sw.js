@@ -1,4 +1,4 @@
-const CACHE_NAME = "anteiku-shell-v1";
+const CACHE_NAME = "anteiku-shell-v2";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/coffee-icon.svg"];
 
 self.addEventListener("install", (event) => {

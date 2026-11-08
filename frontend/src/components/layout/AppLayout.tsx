@@ -2,7 +2,6 @@ import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const OPENING_DURATION_MS = 3000;
@@ -63,9 +62,7 @@ export default function AppLayout() {
           <div className="app-opening__orbit app-opening__orbit--inner" aria-hidden />
           <div className="app-opening__halo" aria-hidden />
           <div className="app-opening__scene relative flex flex-col items-center gap-3">
-            <div className="app-opening__mark"><span aria-hidden /></div>
-            <Sparkles size={16} className="animate-pulse text-sage" aria-hidden />
-            <p className="font-serif text-lg tracking-[0.28em] text-ivory">ANTEIKU</p>
+            <img src="/anteiku-logo.png" alt="Anteiku" className="w-[min(78vw,24rem)] aspect-square object-contain" />
             <p className="app-opening__tagline text-[0.58rem] uppercase tracking-[0.38em] text-muted">Getting time to shine</p>
           </div>
         </div>

@@ -16,10 +16,10 @@
   "theme_color": "#101511",
   "icons": [
     {
-      "src": "/coffee-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/anteiku-emblem.png",
+      "sizes": "835x835",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

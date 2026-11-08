@@ -44,7 +44,7 @@ function EpisodeItem({
       >
         <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded bg-bg-secondary sm:h-[4.5rem] sm:w-28">
           {coverImage ? (
-            <img src={coverImage} alt="" loading="lazy" onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <img src={coverImage} alt="" loading="lazy" onError={(event) => { event.currentTarget.src = "/anteiku-emblem.png"; }} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
           ) : <div className="h-full w-full bg-bg-secondary" />}
           <span className="absolute bottom-1 left-1 rounded bg-bg-primary/85 px-1.5 py-0.5 text-[0.65rem] font-medium text-ivory">{episode}</span>
           {progress && !progress.completed && <span className="absolute inset-x-1 bottom-0.5 h-0.5 overflow-hidden rounded-full bg-white/25"><span className="block h-full w-1/2 rounded-full bg-sage" /></span>}

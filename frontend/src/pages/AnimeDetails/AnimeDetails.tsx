@@ -134,7 +134,7 @@ export default function AnimeDetails() {
                         className="flex items-start gap-3 rounded-anteiku border border-border-subtle bg-bg-card p-3"
                       >
                         {manga.coverImage ? (
-                          <img src={manga.coverImage} alt={`${manga.title.english ?? manga.title.romaji} cover`} onError={(event) => { event.currentTarget.src = "/coffee-icon.svg"; }} className="h-20 w-14 shrink-0 rounded object-cover" loading="lazy" />
+                          <img src={manga.coverImage} alt={`${manga.title.english ?? manga.title.romaji} cover`} onError={(event) => { event.currentTarget.src = "/anteiku-emblem.png"; }} className="h-20 w-14 shrink-0 rounded object-cover" loading="lazy" />
                         ) : (
                           <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded bg-bg-secondary text-muted"><BookOpen size={15} /></div>
                         )}

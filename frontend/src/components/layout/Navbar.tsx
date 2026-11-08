@@ -109,8 +109,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle/60 bg-bg-primary/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
-        <Link to="/" className="flex shrink-0 items-center gap-1.5 font-serif text-base tracking-wide text-ivory md:gap-2 md:text-lg">
-          <span className="h-2 w-2 rounded-full bg-sage" aria-hidden />
+        <Link to="/" className="flex shrink-0 items-center gap-2 font-serif text-base tracking-wide text-ivory md:gap-2.5 md:text-lg">
+          <img src="/anteiku-emblem.png" alt="" className="h-8 w-8 shrink-0 rounded-md object-cover" aria-hidden="true" />
           ANTEIKU
         </Link>
 

@@ -2,9 +2,14 @@
   "name": "Anteiku — Anime, steeped slowly.",
   "short_name": "Anteiku",
   "description": "A quiet corner for anime discovery, tracking and viewing.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "capture_links": "existing-client-navigate",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "orientation": "portrait-primary",
   "background_color": "#101511",
   "theme_color": "#101511",

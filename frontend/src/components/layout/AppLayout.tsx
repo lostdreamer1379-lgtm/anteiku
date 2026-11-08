@@ -5,11 +5,13 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const OPENING_DURATION_MS = 3000;
+
 export default function AppLayout() {
   const [isOpening, setIsOpening] = useState(true);
 
   useEffect(() => {
-    const openingTimer = window.setTimeout(() => setIsOpening(false), 1800);
+    const openingTimer = window.setTimeout(() => setIsOpening(false), OPENING_DURATION_MS);
     return () => window.clearTimeout(openingTimer);
   }, []);
 
@@ -35,7 +37,7 @@ export default function AppLayout() {
             <div className="app-opening__mark"><span aria-hidden /></div>
             <Sparkles size={16} className="animate-pulse text-sage" aria-hidden />
             <p className="font-serif text-lg tracking-[0.28em] text-ivory">ANTEIKU</p>
-            <p className="text-[0.58rem] uppercase tracking-[0.38em] text-muted">A quiet place to begin</p>
+            <p className="app-opening__tagline text-[0.58rem] uppercase tracking-[0.38em] text-muted">Getting time to shine</p>
           </div>
         </div>
       )}

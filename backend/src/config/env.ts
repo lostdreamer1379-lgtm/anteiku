@@ -20,5 +20,5 @@ export const env = {
   frontendOrigins: [...new Set([...configuredFrontendOrigins, "https://frontend-antieku.vercel.app"])],
   databaseUrl: required("DATABASE_URL"),
   supabaseUrl: required("SUPABASE_URL"),
-  supabaseJwtSecret: required("SUPABASE_JWT_SECRET"),
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_JWT_SECRET ?? "",
 };

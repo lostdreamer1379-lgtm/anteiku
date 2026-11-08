@@ -13,6 +13,9 @@ declare global {
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
+    if (!supabaseAdmin) {
+      throw new ApiError(503, "Authentication service is not configured on the backend");
+    }
     const header = req.headers.authorization;
     if (!header?.startsWith("Bearer ")) {
       throw new ApiError(401, "Missing bearer token");

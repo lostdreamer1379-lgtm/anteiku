@@ -45,6 +45,10 @@ export async function deleteAccount(userId: string) {
   // The relation cascades remove the user's profile, watchlist, and progress.
   await prisma.profile.deleteMany({ where: { id: userId } });
 
+  if (!supabaseAdmin) {
+    throw new ApiError(503, "Authentication service is not configured on the backend");
+  }
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
   if (error) {
     throw new ApiError(502, "Could not delete the authentication account. Please try again.");

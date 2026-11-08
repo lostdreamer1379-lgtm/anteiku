@@ -13,6 +13,26 @@ import { errorHandler, ApiError } from "./middleware/errorHandler.js";
 export function createApp() {
   const app = express();
 
+  // Handle browser preflight explicitly. This keeps serverless deployments
+  // from returning a headerless response before the cors package runs.
+  app.use((req, res, next) => {
+    const requestOrigin = req.headers.origin?.replace(/\/+$/, "");
+    if (requestOrigin && env.frontendOrigins.includes(requestOrigin)) {
+      res.header("Access-Control-Allow-Origin", requestOrigin);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Vary", "Origin");
+    }
+
+    if (req.method === "OPTIONS") {
+      res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.status(204).end();
+      return;
+    }
+
+    next();
+  });
+
   app.use(helmet());
   app.use(
     cors({

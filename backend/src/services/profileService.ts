@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import type { UpdateProfileSchema } from "../validators/profile.js";
 import type { z } from "zod";
 import { ApiError } from "../middleware/errorHandler.js";
-import { supabaseAdmin } from "../lib/supabaseAdmin.js";
+import { getSupabaseAdmin } from "../lib/supabaseAdmin.js";
 
 type UpdateInput = z.infer<typeof UpdateProfileSchema>;
 
@@ -45,6 +45,7 @@ export async function deleteAccount(userId: string) {
   // The relation cascades remove the user's profile, watchlist, and progress.
   await prisma.profile.deleteMany({ where: { id: userId } });
 
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new ApiError(503, "Authentication service is not configured on the backend");
   }

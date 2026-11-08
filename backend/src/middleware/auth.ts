@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { supabaseAdmin } from "../lib/supabaseAdmin.js";
+import { getSupabaseAdmin } from "../lib/supabaseAdmin.js";
 import { ApiError } from "./errorHandler.js";
 
 declare global {
@@ -13,6 +13,7 @@ declare global {
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     if (!supabaseAdmin) {
       throw new ApiError(503, "Authentication service is not configured on the backend");
     }

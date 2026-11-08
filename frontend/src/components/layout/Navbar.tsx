@@ -26,6 +26,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>(() => getSearchHistory());
   const [enteringWorlds, setEnteringWorlds] = useState(false);
+  const worldsNavigationTimer = useRef<number | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
@@ -33,6 +34,27 @@ export default function Navbar() {
     { search: debouncedSearch || undefined, sort: ["SEARCH_MATCH"], perPage: 6 },
     Boolean(debouncedSearch),
   );
+
+  useEffect(() => {
+    // Mobile browsers may restore Anteiku from the back-forward cache after
+    // returning from Worlds. Clear the one-shot transition state so the home
+    // page is immediately usable instead of showing the old launch overlay.
+    function resetWorldsTransition() {
+      setEnteringWorlds(false);
+      if (worldsNavigationTimer.current !== null) {
+        window.clearTimeout(worldsNavigationTimer.current);
+        worldsNavigationTimer.current = null;
+      }
+    }
+
+    window.addEventListener("pagehide", resetWorldsTransition);
+    window.addEventListener("pageshow", resetWorldsTransition);
+    return () => {
+      window.removeEventListener("pagehide", resetWorldsTransition);
+      window.removeEventListener("pageshow", resetWorldsTransition);
+      resetWorldsTransition();
+    };
+  }, []);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -78,7 +100,10 @@ export default function Navbar() {
 
     setEnteringWorlds(true);
     setOpen(false);
-    window.setTimeout(() => window.location.assign(WORLDS_URL), 1850);
+    worldsNavigationTimer.current = window.setTimeout(() => {
+      worldsNavigationTimer.current = null;
+      window.location.assign(WORLDS_URL);
+    }, 1850);
   }
 
   return (

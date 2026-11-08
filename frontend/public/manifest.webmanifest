@@ -12,12 +12,12 @@
     "client_mode": ["navigate-existing", "auto"]
   },
   "orientation": "portrait-primary",
-  "background_color": "#101511",
-  "theme_color": "#101511",
+  "background_color": "#030203",
+  "theme_color": "#030203",
   "icons": [
     {
       "src": "/anteiku-emblem.png",
-      "sizes": "835x835",
+      "sizes": "855x855",
       "type": "image/png",
       "purpose": "any"
     }

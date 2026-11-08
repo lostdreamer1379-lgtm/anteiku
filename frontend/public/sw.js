@@ -1,5 +1,5 @@
-const CACHE_NAME = "anteiku-shell-v4";
-const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/anteiku-logo.png", "/anteiku-emblem.png"];
+const CACHE_NAME = "anteiku-shell-v6";
+const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/anteiku-emblem.png", "/anteiku-wordmark.png", "/anteiku-ornament.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)));

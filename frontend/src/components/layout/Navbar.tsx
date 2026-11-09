@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Search, User, LogOut, Menu, X, Clock3, ArrowUpRight, Sparkles, Globe2 } from "lucide-react";
-import { useEffect, useState, useRef, type FormEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import clsx from "clsx";
 import { LayoutGroup, motion } from "motion/react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,9 @@ const links = [
 
 const WORLDS_URL = "https://frontend-worlds.vercel.app/";
 
-export default function Navbar() {
+type NavbarProps = { onEnterWorlds: (event: MouseEvent<HTMLAnchorElement>) => void };
+
+export default function Navbar({ onEnterWorlds }: NavbarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -25,8 +27,6 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>(() => getSearchHistory());
-  const [enteringWorlds, setEnteringWorlds] = useState(false);
-  const worldsNavigationTimer = useRef<number | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
@@ -34,27 +34,6 @@ export default function Navbar() {
     { search: debouncedSearch || undefined, sort: ["SEARCH_MATCH"], perPage: 6 },
     Boolean(debouncedSearch),
   );
-
-  useEffect(() => {
-    // Mobile browsers may restore Anteiku from the back-forward cache after
-    // returning from Worlds. Clear the one-shot transition state so the home
-    // page is immediately usable instead of showing the old launch overlay.
-    function resetWorldsTransition() {
-      setEnteringWorlds(false);
-      if (worldsNavigationTimer.current !== null) {
-        window.clearTimeout(worldsNavigationTimer.current);
-        worldsNavigationTimer.current = null;
-      }
-    }
-
-    window.addEventListener("pagehide", resetWorldsTransition);
-    window.addEventListener("pageshow", resetWorldsTransition);
-    return () => {
-      window.removeEventListener("pagehide", resetWorldsTransition);
-      window.removeEventListener("pageshow", resetWorldsTransition);
-      resetWorldsTransition();
-    };
-  }, []);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -92,18 +71,6 @@ export default function Navbar() {
     event.preventDefault();
     event.stopPropagation();
     setSearchHistory(removeSearchFromHistory(query));
-  }
-
-  function enterWorlds(event: MouseEvent<HTMLAnchorElement>) {
-    event.preventDefault();
-    if (enteringWorlds) return;
-
-    setEnteringWorlds(true);
-    setOpen(false);
-    worldsNavigationTimer.current = window.setTimeout(() => {
-      worldsNavigationTimer.current = null;
-      window.location.assign(WORLDS_URL);
-    }, 1850);
   }
 
   return (
@@ -147,7 +114,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <a
             href={WORLDS_URL}
-            onClick={enterWorlds}
+            onClick={onEnterWorlds}
             aria-label="Enter Frontend Worlds"
             className="worlds-portal group relative hidden h-9 items-center gap-2 overflow-hidden rounded-full border border-violet-300/50 px-3.5 text-xs font-semibold tracking-[0.14em] text-violet-50 transition duration-300 hover:scale-[1.03] hover:border-violet-200 md:inline-flex"
           >
@@ -159,7 +126,7 @@ export default function Navbar() {
 
           <a
             href={WORLDS_URL}
-            onClick={enterWorlds}
+            onClick={onEnterWorlds}
             aria-label="Enter Frontend Worlds"
             className="worlds-portal group relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-violet-300/50 text-violet-50 transition duration-300 hover:scale-[1.06] hover:border-violet-200 md:hidden"
           >
@@ -336,7 +303,7 @@ export default function Navbar() {
           <div className="flex flex-col gap-1">
             <a
               href={WORLDS_URL}
-              onClick={enterWorlds}
+              onClick={onEnterWorlds}
               className="worlds-portal mb-2 flex items-center justify-between rounded-anteiku border border-violet-300/50 px-3 py-3 text-sm font-semibold tracking-[0.14em] text-violet-50"
             >
               <span className="flex items-center gap-2"><Sparkles size={15} className="text-violet-200" aria-hidden /> Enter Worlds</span>
@@ -387,20 +354,6 @@ export default function Navbar() {
         </div>
       )}
 
-      {enteringWorlds && (
-        <div className="worlds-transition" role="status" aria-live="polite" aria-label="Entering Frontend Worlds">
-          <div className="worlds-transition__orb" aria-hidden />
-          <div className="worlds-transition__rings" aria-hidden />
-          <div className="worlds-transition__stars" aria-hidden />
-          <div className="relative flex flex-col items-center gap-3 text-center">
-            <Sparkles size={22} className="animate-pulse text-violet-200" aria-hidden />
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.42em] text-violet-200">Entering</p>
-            <p className="font-serif text-3xl tracking-wide text-white">Frontend Worlds</p>
-            <p className="text-sm text-violet-100/60">A new perspective is unfolding slowly…</p>
-            <div className="worlds-transition__progress" aria-hidden><span /></div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

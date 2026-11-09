@@ -3,14 +3,20 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, Globe2, Sparkles } from "lucide-react";
+import type { MouseEvent } from "react";
 
 const OPENING_DURATION_MS = 5000;
+const WORLDS_URL = "https://frontend-worlds.vercel.app/";
+const WORLDS_TRANSITION_MS = 1900;
 
 export default function AppLayout() {
   const location = useLocation();
   const [isOpening, setIsOpening] = useState(true);
   const [openingKey, setOpeningKey] = useState(0);
+  const [enteringWorlds, setEnteringWorlds] = useState(false);
   const openingTimer = useRef<number | null>(null);
+  const worldsTimer = useRef<number | null>(null);
 
   useEffect(() => {
     function playOpening() {
@@ -36,13 +42,41 @@ export default function AppLayout() {
     return () => {
       window.removeEventListener("pageshow", playOpening);
       if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
+      if (worldsTimer.current !== null) window.clearTimeout(worldsTimer.current);
     };
   }, []);
 
+  useEffect(() => {
+    // If the browser restores Anteiku from the back-forward cache after the
+    // external Worlds page, never leave the launch curtain stuck open.
+    function resetWorldsTransition() {
+      setEnteringWorlds(false);
+      if (worldsTimer.current !== null) {
+        window.clearTimeout(worldsTimer.current);
+        worldsTimer.current = null;
+      }
+    }
+
+    window.addEventListener("pagehide", resetWorldsTransition);
+    window.addEventListener("pageshow", resetWorldsTransition);
+    return () => {
+      window.removeEventListener("pagehide", resetWorldsTransition);
+      window.removeEventListener("pageshow", resetWorldsTransition);
+      resetWorldsTransition();
+    };
+  }, []);
+
+  function enterWorlds(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    if (enteringWorlds) return;
+    setEnteringWorlds(true);
+    worldsTimer.current = window.setTimeout(() => window.location.assign(WORLDS_URL), WORLDS_TRANSITION_MS);
+  }
+
   return (
     <>
-      <div className="app-shell flex min-h-screen flex-col bg-bg-primary">
-        <Navbar />
+      <div className={`app-shell flex min-h-screen flex-col bg-bg-primary${enteringWorlds ? " worlds-is-entering" : ""}`}>
+        <Navbar onEnterWorlds={enterWorlds} />
         <main className="flex-1">
           <div key={location.pathname} className="route-entry">
             <ErrorBoundary>
@@ -52,6 +86,27 @@ export default function AppLayout() {
         </main>
         <Footer />
       </div>
+
+      {enteringWorlds && (
+        <div className="worlds-transition" role="status" aria-live="polite" aria-label="Entering Frontend Worlds">
+          <div className="worlds-transition__grain" aria-hidden />
+          <div className="worlds-transition__stars" aria-hidden />
+          <div className="worlds-transition__halo worlds-transition__halo--outer" aria-hidden />
+          <div className="worlds-transition__halo worlds-transition__halo--inner" aria-hidden />
+          <div className="worlds-transition__orbit worlds-transition__orbit--one" aria-hidden />
+          <div className="worlds-transition__orbit worlds-transition__orbit--two" aria-hidden />
+          <div className="worlds-transition__portal" aria-hidden>
+            <Globe2 size={30} strokeWidth={1.2} />
+          </div>
+          <div className="worlds-transition__content">
+            <div className="worlds-transition__eyebrow"><Sparkles size={13} aria-hidden /> Coordinates shifting</div>
+            <p className="worlds-transition__title">Enter another world</p>
+            <p className="worlds-transition__subtitle">The familiar fades. Something wider is waiting.</p>
+            <div className="worlds-transition__progress" aria-hidden><span /></div>
+            <div className="worlds-transition__destination">Frontend Worlds <ArrowUpRight size={13} aria-hidden /></div>
+          </div>
+        </div>
+      )}
 
       {isOpening && (
         <div key={openingKey} className="app-opening" role="status" aria-label="Opening Anteiku">

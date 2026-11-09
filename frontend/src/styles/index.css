@@ -224,7 +224,7 @@ body {
   outline-offset: 2px;
 }
 
-/* A small portal in the header for the Frontend Worlds experience. */
+/* The Worlds portal is intentionally violet against Anteiku's warm palette. */
 .worlds-portal {
   isolation: isolate;
   background: linear-gradient(120deg, rgb(76 29 149 / 0.92), rgb(126 34 206 / 0.78), rgb(76 29 149 / 0.92));
@@ -253,6 +253,11 @@ body {
   animation: worlds-portal-spin 7s linear infinite;
 }
 
+.worlds-is-entering {
+  animation: worlds-shell-pull 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: 50% 42%;
+}
+
 .worlds-transition {
   position: fixed;
   inset: 0;
@@ -260,45 +265,130 @@ body {
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: radial-gradient(circle at center, rgb(88 28 135 / 0.34), rgb(9 5 22 / 0.98) 42%);
-  animation: worlds-fade-in 1850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  isolation: isolate;
+  color: #f8f5ff;
+  background:
+    radial-gradient(ellipse at 50% 44%, rgb(139 92 246 / 0.16), transparent 27%),
+    radial-gradient(ellipse at 15% 100%, rgb(59 7 100 / 0.35), transparent 40%),
+    #090512;
+  animation: worlds-fade-in 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.worlds-transition__orb {
-  position: absolute;
-  width: min(72vw, 42rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(216 180 254 / 0.4) 0, rgb(139 92 246 / 0.16) 29%, transparent 68%);
-  filter: blur(10px);
-  animation: worlds-orb-breathe 2.5s ease-in-out infinite;
-}
-
-.worlds-transition__rings {
-  position: absolute;
-  width: min(120vw, 64rem);
-  aspect-ratio: 1;
-  border: 1px solid rgb(196 181 253 / 0.2);
-  border-radius: 50%;
-  box-shadow: 0 0 0 5rem rgb(139 92 246 / 0.04), 0 0 0 12rem rgb(139 92 246 / 0.035), 0 0 80px rgb(167 139 250 / 0.3);
-  animation: worlds-ring-expand 1650ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
+.worlds-transition__grain,
 .worlds-transition__stars {
   position: absolute;
   inset: 0;
-  opacity: 0;
-  background-image: radial-gradient(circle at 18% 24%, rgb(221 214 254 / 0.7) 0 1px, transparent 1.5px), radial-gradient(circle at 78% 32%, rgb(221 214 254 / 0.55) 0 1px, transparent 1.5px), radial-gradient(circle at 66% 78%, rgb(221 214 254 / 0.5) 0 1px, transparent 1.5px), radial-gradient(circle at 28% 72%, rgb(221 214 254 / 0.45) 0 1px, transparent 1.5px);
-  animation: worlds-stars-drift 1850ms ease-out both;
+  pointer-events: none;
 }
 
+.worlds-transition__grain {
+  z-index: 1;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+
+.worlds-transition__stars {
+  z-index: 2;
+  opacity: 0;
+  background-image:
+    radial-gradient(circle at 12% 26%, rgb(233 213 255 / 0.85) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 83% 20%, rgb(233 213 255 / 0.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 76% 76%, rgb(233 213 255 / 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 20% 80%, rgb(233 213 255 / 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 52% 11%, rgb(233 213 255 / 0.55) 0 1px, transparent 1.5px);
+  animation: worlds-stars-drift 1900ms ease-out both;
+}
+
+.worlds-transition__halo {
+  position: absolute;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.worlds-transition__halo--outer {
+  width: min(100vw, 54rem);
+  background: radial-gradient(circle, rgb(139 92 246 / 0.24) 0, rgb(76 29 149 / 0.12) 31%, transparent 68%);
+  filter: blur(18px);
+  animation: worlds-orb-breathe 1900ms ease-in-out infinite;
+}
+
+.worlds-transition__halo--inner {
+  width: min(54vw, 25rem);
+  border: 1px solid rgb(221 214 254 / 0.18);
+  box-shadow: 0 0 80px rgb(167 139 250 / 0.28), inset 0 0 80px rgb(167 139 250 / 0.1);
+  animation: worlds-ring-expand 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worlds-transition__orbit {
+  position: absolute;
+  width: min(140vw, 78rem);
+  height: min(34vw, 17rem);
+  border: 1px solid rgb(196 181 253 / 0.16);
+  border-radius: 50%;
+  transform: rotate(-22deg);
+  box-shadow: 0 0 30px rgb(167 139 250 / 0.12);
+  animation: worlds-orbit-sweep 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worlds-transition__orbit--two {
+  width: min(112vw, 62rem);
+  transform: rotate(38deg) scaleY(0.6);
+  border-color: rgb(221 214 254 / 0.1);
+}
+
+.worlds-transition__portal,
+.worlds-transition__content { position: relative; z-index: 3; }
+
+.worlds-transition__portal {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 11rem;
+  border: 1px solid rgb(221 214 254 / 0.42);
+  border-radius: 50%;
+  color: #e9d5ff;
+  background: rgb(109 40 217 / 0.18);
+  box-shadow: 0 0 0 0.65rem rgb(139 92 246 / 0.06), 0 0 70px rgb(167 139 250 / 0.45);
+  animation: worlds-portal-bloom 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worlds-transition__content {
+  position: absolute;
+  bottom: max(11vh, 4.75rem);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: min(88vw, 35rem);
+  text-align: center;
+  animation: worlds-copy-rise 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worlds-transition__eyebrow,
+.worlds-transition__destination {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: rgb(221 214 254 / 0.8);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.worlds-transition__title { margin: 0.7rem 0 0.35rem; font-family: Fraunces, serif; font-size: clamp(2.25rem, 7vw, 4.8rem); line-height: 0.98; letter-spacing: -0.035em; }
+.worlds-transition__subtitle { margin: 0; color: rgb(233 213 255 / 0.58); font-size: clamp(0.78rem, 1.8vw, 0.95rem); }
+.worlds-transition__destination { margin-top: 1.2rem; color: rgb(233 213 255 / 0.46); letter-spacing: 0.18em; }
+
 .worlds-transition__progress {
-  width: 8rem;
-  height: 1px;
-  margin-top: 0.8rem;
+  width: min(12rem, 48vw);
+  height: 2px;
+  margin-top: 1.5rem;
   overflow: hidden;
   border-radius: 999px;
-  background: rgb(196 181 253 / 0.14);
+  background: rgb(196 181 253 / 0.16);
 }
 
 .worlds-transition__progress span {
@@ -311,6 +401,7 @@ body {
 }
 
 @keyframes worlds-portal-spin { to { transform: rotate(360deg); } }
+@keyframes worlds-shell-pull { 0% { filter: none; transform: scale(1); } 34% { filter: brightness(0.82) saturate(0.8); transform: scale(0.995); } 100% { filter: brightness(0.36) saturate(0.5); transform: scale(0.97); } }
 @keyframes app-shell-arrive { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: scale(1); } }
 @keyframes route-entry-arrive { from { opacity: 0; transform: translateY(0.35rem); } to { opacity: 1; transform: translateY(0); } }
 @keyframes app-opening-exit { 0%, 94% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
@@ -330,8 +421,24 @@ body {
 @keyframes worlds-fade-in { 0% { opacity: 0; } 18%, 82% { opacity: 1; } 100% { opacity: 0.98; } }
 @keyframes worlds-orb-breathe { 50% { transform: scale(1.12); opacity: 0.72; } }
 @keyframes worlds-ring-expand { 0% { transform: scale(0.35); opacity: 0; } 45% { opacity: 1; } 100% { transform: scale(1.06); opacity: 0.7; } }
+@keyframes worlds-orbit-sweep { 0% { opacity: 0; transform: scale(0.52) rotate(-22deg); } 38% { opacity: 1; } 100% { opacity: 0.7; transform: scale(1.15) rotate(18deg); } }
+@keyframes worlds-portal-bloom { 0% { opacity: 0; transform: translateY(1.5rem) scale(0.4); } 38% { opacity: 1; } 100% { transform: translateY(0) scale(1); } }
+@keyframes worlds-copy-rise { 0%, 28% { opacity: 0; transform: translateY(1rem); } 58% { opacity: 1; } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes worlds-stars-drift { 0%, 30% { opacity: 0; transform: scale(0.8); } 62% { opacity: 0.8; } 100% { opacity: 0.35; transform: scale(1.08); } }
 @keyframes worlds-progress { from { transform: scaleX(0); } 84% { transform: scaleX(0.88); } to { transform: scaleX(1); } }
+
+@media (max-width: 640px) {
+  .worlds-transition__portal { width: 4.25rem; height: 4.25rem; margin-bottom: 9rem; }
+  .worlds-transition__orbit { width: 170vw; height: 42vw; }
+  .worlds-transition__content { bottom: max(9vh, 3.75rem); }
+  .worlds-transition__eyebrow { letter-spacing: 0.18em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .worlds-is-entering, .worlds-transition, .worlds-transition__stars, .worlds-transition__halo,
+  .worlds-transition__orbit, .worlds-transition__portal, .worlds-transition__content,
+  .worlds-transition__progress span { animation-duration: 1ms !important; }
+}
 
 /* Quiet, fine-line scrollbars used throughout the app. The two small dots
    mark the scrollable range without competing with the content. */

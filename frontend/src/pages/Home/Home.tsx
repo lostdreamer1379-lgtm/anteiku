@@ -77,7 +77,7 @@ function ContinueWatchingCard({ entry, onRemove }: { entry: WatchProgressEntry; 
         <X size={13} aria-hidden="true" />
       </button>
       <Link
-        to={`/watch/${entry.animeId}/${entry.episodeNumber}`}
+        to={`/watch/${entry.animeId}/${entry.episodeNumber}?t=${Math.max(0, Math.floor(entry.progressSeconds))}`}
         className="group block"
         aria-label={`Continue watching ${title}, episode ${entry.episodeNumber}`}
       >

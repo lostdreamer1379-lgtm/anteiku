@@ -39,6 +39,8 @@ export default function Watch() {
     if (nextEpisode < 1 || (anime?.episodes && nextEpisode > anime.episodes)) return;
     if (broadcast && partyActive) party.send({ action: "episode", episode: nextEpisode });
     const next = new URLSearchParams(searchParams);
+    // A resume offset belongs to the current episode only.
+    next.delete("t");
     if (partyRoom) next.set("party", partyRoom);
     else next.delete("party");
     navigate(`/watch/${animeId}/${nextEpisode}?${next.toString()}`);
@@ -52,6 +54,7 @@ export default function Watch() {
       setPartyNotice("The watch party ended because a participant switched anime.");
     }
     const next = new URLSearchParams(searchParams);
+    next.delete("t");
     if (partyActive && continueParty) next.set("party", activePartyRoom!);
     else next.delete("party");
     navigate(`/watch/${nextAnimeId}/${nextEpisode}?${next.toString()}`);
@@ -105,7 +108,10 @@ export default function Watch() {
 
   const totalEpisodes = anime?.episodes ?? 99;
   const savedEntry = user ? progressFor(animeId, episodeNumber) : undefined;
-  const savedProgressSeconds = savedEntry?.progressSeconds ?? 0;
+  const resumeFromLink = Number(searchParams.get("t"));
+  const savedProgressSeconds = Number.isFinite(resumeFromLink) && resumeFromLink >= 0
+    ? Math.floor(resumeFromLink)
+    : savedEntry?.progressSeconds ?? 0;
 
   useEffect(() => {
     const episodeKey = `${animeId}-${episodeNumber}`;
